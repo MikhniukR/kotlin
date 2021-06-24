@@ -78,7 +78,7 @@ enum class EvaluationMode(protected val mustCheckBody: Boolean) {
     fun IrDeclaration.isMarkedAsCompileTime() = isMarkedWith(compileTimeAnnotation)
     private fun IrDeclaration.isContract() = isMarkedWith(contractsDslAnnotation)
     private fun IrDeclaration.isMarkedAsEvaluateIntrinsic() = isMarkedWith(evaluateIntrinsicAnnotation)
-    protected fun IrDeclaration.isCompileTimeTypeAlias() = this.parentClassOrNull?.fqNameWhenAvailable?.asString() in compileTimeTypeAliases
+    protected fun IrDeclaration.isCompileTimeTypeAlias() = this.parentClassOrNull?.fqName in compileTimeTypeAliases
 
     protected fun IrDeclaration.isMarkedWith(annotation: FqName): Boolean {
         if (this is IrClass && this.isCompanion) return false
