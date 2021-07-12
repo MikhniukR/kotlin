@@ -10,6 +10,8 @@ import org.jetbrains.kotlin.ir.symbols.IrFieldSymbol
 
 abstract class IrStaticallyInitializedValue : IrExpression() {
     abstract var isBoxed: Boolean
+    abstract fun contentEquals(other: IrStaticallyInitializedValue) : Boolean
+    abstract fun contentHashCode(): Int
 }
 
 abstract class IrStaticallyInitializedConstant : IrStaticallyInitializedValue() {
