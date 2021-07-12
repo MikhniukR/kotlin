@@ -406,6 +406,35 @@ open class DeepCopyIrTreeWithSymbols(
     override fun <T> visitConst(expression: IrConst<T>): IrConst<T> =
         expression.shallowCopy().copyAttributes(expression)
 
+    override fun visitStaticallyInitializedObject(expression: IrStaticallyInitializedObject): IrExpression =
+        IrStaticallyInitializedObjectImpl(
+            expression.startOffset, expression.endOffset,
+            expression.type.remapType(),
+            expression.fields.mapValues { (_, value) -> value.transform() },
+            expression.isBoxed
+        ).copyAttributes(expression)
+
+    override fun visitStaticallyInitializedConstant(expression: IrStaticallyInitializedConstant): IrExpression =
+        IrStaticallyInitializedConstantImpl(
+            expression.startOffset, expression.endOffset,
+            expression.value.transform()
+        ).copyAttributes(expression)
+
+    override fun visitStaticallyInitializedArray(expression: IrStaticallyInitializedArray): IrExpression =
+        IrStaticallyInitializedArrayImpl(
+            expression.startOffset, expression.endOffset,
+            expression.type.remapType(),
+            expression.values.transform(),
+            expression.isBoxed
+        ).copyAttributes(expression)
+
+    override fun visitStaticallyInitializedIntrinsic(expression: IrStaticallyInitializedIntrinsic): IrExpression =
+        IrStaticallyInitializedIntrinsicImpl(
+            expression.startOffset, expression.endOffset,
+            expression.expression.transform(),
+            expression.isBoxed
+        ).copyAttributes(expression)
+
     override fun visitVararg(expression: IrVararg): IrVararg =
         IrVarargImpl(
             expression.startOffset, expression.endOffset,

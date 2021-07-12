@@ -137,6 +137,26 @@ abstract class IrElementTransformerVoid : IrElementTransformer<Nothing?> {
     open fun <T> visitConst(expression: IrConst<T>) = visitExpression(expression)
     final override fun <T> visitConst(expression: IrConst<T>, data: Nothing?) = visitConst(expression)
 
+    open fun visitStaticallyInitializedValue(expression: IrStaticallyInitializedValue) = visitExpression(expression)
+    override fun visitStaticallyInitializedValue(expression: IrStaticallyInitializedValue, data: Nothing?) =
+        visitStaticallyInitializedValue(expression)
+
+    open fun visitStaticallyInitializedObject(expression: IrStaticallyInitializedObject) = visitStaticallyInitializedValue(expression)
+    override fun visitStaticallyInitializedObject(expression: IrStaticallyInitializedObject, data: Nothing?) =
+        visitStaticallyInitializedObject(expression)
+
+    open fun visitStaticallyInitializedConstant(expression: IrStaticallyInitializedConstant) = visitStaticallyInitializedValue(expression)
+    override fun visitStaticallyInitializedConstant(expression: IrStaticallyInitializedConstant, data: Nothing?) =
+        visitStaticallyInitializedConstant(expression)
+
+    open fun visitStaticallyInitializedArray(expression: IrStaticallyInitializedArray) = visitStaticallyInitializedValue(expression)
+    override fun visitStaticallyInitializedArray(expression: IrStaticallyInitializedArray, data: Nothing?) =
+        visitStaticallyInitializedArray(expression)
+
+    open fun visitStaticallyInitializedIntrinsic(expression: IrStaticallyInitializedIntrinsic) = visitStaticallyInitializedValue(expression)
+    override fun visitStaticallyInitializedIntrinsic(expression: IrStaticallyInitializedIntrinsic, data: Nothing?) =
+        visitStaticallyInitializedIntrinsic(expression)
+
     open fun visitVararg(expression: IrVararg) = visitExpression(expression)
     final override fun visitVararg(expression: IrVararg, data: Nothing?) = visitVararg(expression)
 

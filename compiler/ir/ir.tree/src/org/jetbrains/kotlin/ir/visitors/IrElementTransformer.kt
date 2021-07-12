@@ -81,6 +81,18 @@ interface IrElementTransformer<in D> : IrElementVisitor<IrElement, D> {
 
     override fun <T> visitConst(expression: IrConst<T>, data: D) = visitExpression(expression, data)
     override fun visitVararg(expression: IrVararg, data: D) = visitExpression(expression, data)
+    override fun visitStaticallyInitializedValue(expression: IrStaticallyInitializedValue, data: D) = visitExpression(expression, data)
+    override fun visitStaticallyInitializedObject(expression: IrStaticallyInitializedObject, data: D) =
+        visitStaticallyInitializedValue(expression, data)
+
+    override fun visitStaticallyInitializedConstant(expression: IrStaticallyInitializedConstant, data: D) =
+        visitStaticallyInitializedValue(expression, data)
+
+    override fun visitStaticallyInitializedArray(expression: IrStaticallyInitializedArray, data: D) =
+        visitStaticallyInitializedValue(expression, data)
+
+    override fun visitStaticallyInitializedIntrinsic(expression: IrStaticallyInitializedIntrinsic, data: D) =
+        visitStaticallyInitializedValue(expression, data)
 
     override fun visitSpreadElement(spread: IrSpreadElement, data: D): IrSpreadElement {
         spread.transformChildren(this, data)

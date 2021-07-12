@@ -343,6 +343,22 @@ class DumpIrTreeVisitor(
         }
     }
 
+    override fun visitStaticallyInitializedArray(expression: IrStaticallyInitializedArray, data: String) {
+        expression.dumpLabeledElementWith(data) {
+            for ((i, value) in expression.values.withIndex()) {
+                value.accept(this, i.toString())
+            }
+        }
+    }
+
+    override fun visitStaticallyInitializedObject(expression: IrStaticallyInitializedObject, data: String) {
+        expression.dumpLabeledElementWith(data) {
+            for ((field, value) in expression.fields) {
+                value.accept(this, field.toString())
+            }
+        }
+    }
+
     private inline fun IrElement.dumpLabeledElementWith(label: String, body: () -> Unit) {
         printer.println(accept(elementRenderer, null).withLabel(label))
         indented(body)

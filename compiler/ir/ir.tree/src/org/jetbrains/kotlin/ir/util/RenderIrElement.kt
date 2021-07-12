@@ -727,6 +727,19 @@ class RenderIrElementVisitor(private val normalizeNames: Boolean = false, privat
     override fun visitErrorCallExpression(expression: IrErrorCallExpression, data: Nothing?): String =
         "ERROR_CALL '${expression.description}' type=${expression.type.render()}"
 
+    override fun visitStaticallyInitializedArray(expression: IrStaticallyInitializedArray, data: Nothing?): String =
+        "STATIC_ARRAY type=${expression.type.render()}"
+
+    override fun visitStaticallyInitializedObject(expression: IrStaticallyInitializedObject, data: Nothing?): String =
+        "STATIC_OBJECT type=${expression.type.render()}"
+
+    override fun visitStaticallyInitializedConstant(expression: IrStaticallyInitializedConstant, data: Nothing?): String =
+        "STATIC_CONST type=${expression.type.render()}"
+
+    override fun visitStaticallyInitializedIntrinsic(expression: IrStaticallyInitializedIntrinsic, data: Nothing?): String =
+        "STATIC_INTRINSIC type=${expression.type.render()}"
+
+
     private val descriptorRendererForErrorDeclarations = DescriptorRenderer.ONLY_NAMES_WITH_SHORT_TYPES
 }
 

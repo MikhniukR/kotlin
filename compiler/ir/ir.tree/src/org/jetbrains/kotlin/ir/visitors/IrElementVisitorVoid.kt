@@ -107,6 +107,26 @@ interface IrElementVisitorVoid : IrElementVisitor<Unit, Nothing?> {
     fun <T> visitConst(expression: IrConst<T>) = visitExpression(expression)
     override fun <T> visitConst(expression: IrConst<T>, data: Nothing?) = visitConst(expression)
 
+    fun visitStaticallyInitializedValue(expression: IrStaticallyInitializedValue) = visitExpression(expression)
+    override fun visitStaticallyInitializedValue(expression: IrStaticallyInitializedValue, data: Nothing?) =
+        visitStaticallyInitializedValue(expression)
+
+    fun visitStaticallyInitializedObject(expression: IrStaticallyInitializedObject) = visitStaticallyInitializedValue(expression)
+    override fun visitStaticallyInitializedObject(expression: IrStaticallyInitializedObject, data: Nothing?) =
+        visitStaticallyInitializedObject(expression)
+
+    fun visitStaticallyInitializedConstant(expression: IrStaticallyInitializedConstant) = visitStaticallyInitializedValue(expression)
+    override fun visitStaticallyInitializedConstant(expression: IrStaticallyInitializedConstant, data: Nothing?) =
+        visitStaticallyInitializedConstant(expression)
+
+    fun visitStaticallyInitializedArray(expression: IrStaticallyInitializedArray) = visitStaticallyInitializedValue(expression)
+    override fun visitStaticallyInitializedArray(expression: IrStaticallyInitializedArray, data: Nothing?) =
+        visitStaticallyInitializedArray(expression)
+
+    fun visitStaticallyInitializedIntrinsic(expression: IrStaticallyInitializedIntrinsic) = visitStaticallyInitializedValue(expression)
+    override fun visitStaticallyInitializedIntrinsic(expression: IrStaticallyInitializedIntrinsic, data: Nothing?) =
+        visitStaticallyInitializedIntrinsic(expression)
+
     fun visitVararg(expression: IrVararg) = visitExpression(expression)
     override fun visitVararg(expression: IrVararg, data: Nothing?) = visitVararg(expression)
 
