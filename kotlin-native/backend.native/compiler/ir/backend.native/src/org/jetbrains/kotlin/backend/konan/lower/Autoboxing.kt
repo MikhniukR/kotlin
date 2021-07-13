@@ -158,6 +158,10 @@ private class AutoboxingTransformer(val context: Context) : AbstractValueUsageTr
         return if (conversion == null) {
             this
         } else {
+            if (this is IrStaticallyInitializedValue) {
+                this.isBoxed = actualType.getInlinedClassNative() != null
+                return this
+            }
             val parameter = conversion.owner.explicitParameters.single()
             val argument = this.uncheckedCast(parameter.type)
 
