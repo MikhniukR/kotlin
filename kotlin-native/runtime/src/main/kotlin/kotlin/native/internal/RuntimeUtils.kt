@@ -228,7 +228,8 @@ internal fun KonanObjectToUtf8Array(value: Any?): ByteArray {
     return string.encodeToByteArray()
 }
 
-@TypedIntrinsic(IntrinsicType.LIST_OF_INTERNAL)
+// It was intrinsic, but we don't need it anymore
+// TODO: can we just delete it?
 @PublishedApi
 internal fun <T> listOfInternal(vararg elements: T): List<T> {
     val result = ArrayList<T>(elements.size)
