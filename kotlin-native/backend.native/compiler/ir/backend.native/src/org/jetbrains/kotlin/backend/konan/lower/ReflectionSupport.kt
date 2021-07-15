@@ -8,21 +8,14 @@ package org.jetbrains.kotlin.backend.konan.lower
 import org.jetbrains.kotlin.backend.konan.InteropFqNames
 import org.jetbrains.kotlin.backend.konan.KonanBackendContext
 import org.jetbrains.kotlin.backend.konan.ir.typeWithStarProjections
-import org.jetbrains.kotlin.backend.konan.ir.typeWithoutArguments
 import org.jetbrains.kotlin.backend.konan.isObjCClass
 import org.jetbrains.kotlin.backend.konan.llvm.computeFullName
 import org.jetbrains.kotlin.backend.konan.reportCompilationError
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.*
-import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
-import org.jetbrains.kotlin.ir.declarations.IrFile
-import org.jetbrains.kotlin.ir.declarations.IrFunction
-import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
-import org.jetbrains.kotlin.ir.expressions.IrExpression
-import org.jetbrains.kotlin.ir.expressions.IrMemberAccessExpression
-import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrVarargImpl
+import org.jetbrains.kotlin.ir.declarations.*
+import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
 import org.jetbrains.kotlin.ir.types.*
@@ -31,6 +24,10 @@ import org.jetbrains.kotlin.ir.util.irCall
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameUnsafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
 import org.jetbrains.kotlin.types.Variance
+
+private fun IrBuilderWithScope.irStaticString(string: String) = irStaticallyInitializedConstant(irString(string))
+private fun IrBuilderWithScope.irStaticInt(int: Int) = irStaticallyInitializedConstant(irInt(int))
+private fun IrBuilderWithScope.irStaticBoolean(boolean: Boolean) = irStaticallyInitializedConstant(irBoolean(boolean))
 
 internal class KTypeGenerator(
         val context: KonanBackendContext,
@@ -49,11 +46,11 @@ internal class KTypeGenerator(
             type: IrType,
             leaveReifiedForLater: Boolean,
             seenTypeParameters: MutableSet<IrTypeParameter>
-    ): IrExpression {
+    ): IrStaticallyInitializedValue {
         if (type !is IrSimpleType) {
             // Represent as non-denotable type:
             return irKTypeImpl(
-                    kClassifier = irNull(),
+                    kClassifier = irStaticallyInitializedConstant(irNull()),
                     irTypeArguments = emptyList(),
                     isMarkedNullable = false,
                     leaveReifiedForLater = leaveReifiedForLater,
@@ -66,7 +63,7 @@ internal class KTypeGenerator(
                 is IrTypeParameterSymbol -> {
                     if (classifier.owner.isReified && leaveReifiedForLater) {
                         // Leave as is for reification.
-                        return irCall(symbols.typeOf).apply { putTypeArgument(0, type) }
+                        return irStaticallyInitializedIntrinsic(irCall(symbols.typeOf).apply { putTypeArgument(0, type) })
                     }
 
                     // Leave upper bounds of non-reified type parameters as is, even if they are reified themselves.
@@ -85,21 +82,21 @@ internal class KTypeGenerator(
         } catch (t: RecursiveBoundsException) {
             if (needExactTypeParameters)
                 this@KTypeGenerator.context.reportCompilationError(t.message!!, irFile, irElement)
-            return irCall(symbols.kTypeImplForTypeParametersWithRecursiveBounds.constructors.single())
+            return irStaticallyInitializedObject(symbols.kTypeImplForTypeParametersWithRecursiveBounds.defaultType, emptyMap())
         }
     }
 
     private fun IrBuilderWithScope.irKTypeImpl(
-            kClassifier: IrExpression,
+            kClassifier: IrStaticallyInitializedValue,
             irTypeArguments: List<IrTypeArgument>,
             isMarkedNullable: Boolean,
             leaveReifiedForLater: Boolean,
             seenTypeParameters: MutableSet<IrTypeParameter>
-    ): IrExpression = irCall(symbols.kTypeImpl.constructors.single()).apply {
-        putValueArgument(0, kClassifier)
-        putValueArgument(1, irKTypeProjectionsList(irTypeArguments, leaveReifiedForLater, seenTypeParameters))
-        putValueArgument(2, irBoolean(isMarkedNullable))
-    }
+    ): IrStaticallyInitializedValue = irStaticallyInitializedObject(symbols.kTypeImpl.owner.defaultType, mapOf(
+            "classifier" to kClassifier,
+            "arguments" to irKTypeProjectionsList(irTypeArguments, leaveReifiedForLater, seenTypeParameters),
+            "isMarkedNullable" to irStaticallyInitializedConstant(irBoolean(isMarkedNullable)),
+    ))
 
     private fun IrBuilderWithScope.irKClass(symbol: IrClassSymbol) = irKClass(this@KTypeGenerator.context, symbol)
 
@@ -107,86 +104,80 @@ internal class KTypeGenerator(
             typeParameter: IrTypeParameter,
             leaveReifiedForLater: Boolean,
             seenTypeParameters: MutableSet<IrTypeParameter>
-    ): IrMemberAccessExpression<*> {
+    ): IrStaticallyInitializedValue {
         if (!seenTypeParameters.add(typeParameter))
             throw RecursiveBoundsException("Non-reified type parameters with recursive bounds are not supported yet: ${typeParameter.render()}")
-        val result = irCall(symbols.kTypeParameterImpl.constructors.single()).apply {
-            putValueArgument(0, irString(typeParameter.name.asString()))
-            putValueArgument(1, irString(typeParameter.parentUniqueName))
-            putValueArgument(2, irKTypeList(typeParameter.superTypes, leaveReifiedForLater, seenTypeParameters))
-            putValueArgument(3, irKVariance(typeParameter.variance))
-            putValueArgument(4, irBoolean(typeParameter.isReified))
-        }
+        val result = irStaticallyInitializedObject(symbols.kTypeParameterImpl.defaultType, mapOf(
+                "name" to irStaticString(typeParameter.name.asString()),
+                "containerFqName" to irStaticString(typeParameter.parentUniqueName),
+                "upperBounds" to irKTypeList(typeParameter.superTypes, leaveReifiedForLater, seenTypeParameters),
+                "varianceId" to irStaticInt(mapVariance(typeParameter.variance)),
+                "isReified" to irStaticBoolean(typeParameter.isReified),
+        ))
         seenTypeParameters.remove(typeParameter)
         return result
     }
 
-    private val IrTypeParameter.parentUniqueName get() = when (val parent = parent) {
-        is IrFunction -> parent.computeFullName()
-        else -> parent.fqNameForIrSerialization.asString()
-    }
-
-    private fun IrBuilderWithScope.irKVariance(variance: Variance) =
-            IrGetEnumValueImpl(
-                    startOffset, endOffset,
-                    symbols.kVariance.defaultType,
-                    when (variance) {
-                        Variance.INVARIANT -> symbols.kVarianceInvariant
-                        Variance.IN_VARIANCE -> symbols.kVarianceIn
-                        Variance.OUT_VARIANCE -> symbols.kVarianceOut
-                    }
-            )
-
-    private fun <T> IrBuilderWithScope.irKTypeLikeList(
-            types: List<T>,
-            itemType: IrType,
-            itemBuilder: (T) -> IrExpression
-    ) = if (types.isEmpty()) {
-        irCall(symbols.emptyList, listOf(itemType))
-    } else {
-        irCall(symbols.listOf, listOf(itemType)).apply {
-            putValueArgument(0, IrVarargImpl(
-                    startOffset, endOffset,
-                    type = symbols.array.typeWith(itemType),
-                    varargElementType = itemType,
-                    elements = types.map { itemBuilder(it) }
-            ))
+    private val IrTypeParameter.parentUniqueName
+        get() = when (val parent = parent) {
+            is IrFunction -> parent.computeFullName()
+            else -> parent.fqNameForIrSerialization.asString()
         }
-    }
 
     private fun IrBuilderWithScope.irKTypeList(
             types: List<IrType>,
             leaveReifiedForLater: Boolean,
             seenTypeParameters: MutableSet<IrTypeParameter>
-    ) = irKTypeLikeList(types, symbols.kType.defaultType) { irKType(it, leaveReifiedForLater, seenTypeParameters) }
+    ): IrStaticallyInitializedValue {
+        val itemType = symbols.kType.defaultType
+        val elements = irStaticallyInitializedArray(symbols.array.typeWith(itemType),
+                types.map { irKType(it, leaveReifiedForLater, seenTypeParameters) }
+        )
+        return irStaticallyInitializedObject(symbols.arrayAsList.typeWith(itemType), mapOf(
+                "array" to elements
+        ))
+    }
+
+    // this constants are copypasted from KVarianceMapper.Companion in KTypeImpl.kt
+    private fun mapVariance(variance: Variance) = when (variance) {
+        Variance.INVARIANT -> 0
+        Variance.IN_VARIANCE -> 1
+        Variance.OUT_VARIANCE -> 2
+    }
 
     private fun IrBuilderWithScope.irKTypeProjectionsList(
             irTypeArguments: List<IrTypeArgument>,
             leaveReifiedForLater: Boolean,
             seenTypeParameters: MutableSet<IrTypeParameter>
-    ) = irKTypeLikeList(irTypeArguments, symbols.kTypeProjection.typeWithoutArguments) {
-        irKTypeProjection(it, leaveReifiedForLater, seenTypeParameters)
-    }
-
-    private fun IrBuilderWithScope.irKTypeProjection(
-            argument: IrTypeArgument,
-            leaveReifiedForLater: Boolean,
-            seenTypeParameters: MutableSet<IrTypeParameter>
-    ) = when (argument) {
-        is IrTypeProjection -> irCall(symbols.kTypeProjectionFactories.getValue(argument.variance)).apply {
-            dispatchReceiver = irGetObject(symbols.kTypeProjectionCompanion)
-            putValueArgument(0, irKType(argument.type, leaveReifiedForLater, seenTypeParameters))
-        }
-
-        is IrStarProjection -> irCall(symbols.kTypeProjectionStar.owner.getter!!).apply {
-            dispatchReceiver = irGetObject(symbols.kTypeProjectionCompanion)
-        }
-
-        else -> error("Unexpected IrTypeArgument: $argument (${argument::class})")
+    ): IrStaticallyInitializedValue {
+        val variance = irStaticallyInitializedArray(
+                symbols.intArrayType,
+                irTypeArguments.map { argument ->
+                    when (argument) {
+                        is IrStarProjection -> irStaticInt(-1)
+                        is IrTypeProjection -> irStaticInt(mapVariance(argument.variance))
+                        else -> error("Unexpected IrTypeArgument: $argument (${argument::class})")
+                    }
+                })
+        val type = irStaticallyInitializedArray(
+                symbols.array.typeWith(symbols.kType.defaultType.makeNullable()),
+                irTypeArguments.map { argument ->
+                    when (argument) {
+                        is IrStarProjection -> irStaticallyInitializedConstant(irNull())
+                        is IrTypeProjection -> irKType(argument.type, leaveReifiedForLater, seenTypeParameters)
+                        else -> error("Unexpected IrTypeArgument: $argument (${argument::class})")
+                    }
+                })
+        return irStaticallyInitializedObject(
+                symbols.kTypeProjectionList.defaultType,
+                mapOf(
+                        "variance" to variance,
+                        "type" to type
+                ))
     }
 }
 
-internal fun IrBuilderWithScope.irKClass(context: KonanBackendContext, symbol: IrClassSymbol): IrExpression {
+internal fun IrBuilderWithScope.irKClass(context: KonanBackendContext, symbol: IrClassSymbol): IrStaticallyInitializedValue {
     val symbols = context.ir.symbols
     return when {
         symbol.descriptor.isObjCClass() ->
@@ -196,13 +187,13 @@ internal fun IrBuilderWithScope.irKClass(context: KonanBackendContext, symbol: I
             it is ClassDescriptor && it.fqNameUnsafe == InteropFqNames.nativePointed
         } -> irKClassUnsupported(context, "KClass for interop types is not supported yet")
 
-        else -> irCall(symbols.kClassImplConstructor.owner).apply {
-            putValueArgument(0, irCall(symbols.getClassTypeInfo, listOf(symbol.typeWithStarProjections)))
-        }
+        else -> irStaticallyInitializedObject(symbols.kClassImpl.defaultType, mapOf(
+                "typeInfo" to irStaticallyInitializedIntrinsic(irCall(symbols.getClassTypeInfo, listOf(symbol.typeWithStarProjections)))
+        ))
     }
 }
 
 private fun IrBuilderWithScope.irKClassUnsupported(context: KonanBackendContext, message: String) =
-        irCall(context.ir.symbols.kClassUnsupportedImplConstructor.owner).apply {
-            putValueArgument(0, irString(message))
-        }
+        irStaticallyInitializedObject(context.ir.symbols.kClassUnsupportedImpl.defaultType, mapOf(
+                "message" to irStaticString(message)
+        ))
