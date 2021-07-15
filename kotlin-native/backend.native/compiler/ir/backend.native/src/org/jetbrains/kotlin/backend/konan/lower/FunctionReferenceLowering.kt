@@ -148,8 +148,12 @@ internal class FunctionReferenceLowering(val context: Context): FileLoweringPass
                 generatedClasses.add(loweredFunctionReference.functionReferenceClass)
                 val irBuilder = context.createIrBuilder(currentScope!!.scope.scopeOwnerSymbol,
                         expression.startOffset, expression.endOffset)
+                val arguments = expression.getArguments()
+                if (arguments.isEmpty()) {
+                    return irBuilder.irStaticallyInitializedObject(loweredFunctionReference.functionReferenceClass.defaultType, emptyMap())
+                }
                 return irBuilder.irCall(loweredFunctionReference.functionReferenceConstructor.symbol).apply {
-                    expression.getArguments().forEachIndexed { index, argument ->
+                    arguments.forEachIndexed { index, argument ->
                         putValueArgument(index, argument.second)
                     }
                 }

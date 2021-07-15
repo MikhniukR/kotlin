@@ -7,8 +7,9 @@ import kotlin.test.*
 import kotlin.native.concurrent.*
 
 fun mainLegacyMM() {
+    val wrong = "wrong"
     assertFailsWith<InvalidMutabilityException> {
-        setUnhandledExceptionHook { _ -> println("wrong") }
+        setUnhandledExceptionHook { _ -> println(wrong) }
     }
 
     val x = 42
