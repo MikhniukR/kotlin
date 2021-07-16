@@ -13,11 +13,11 @@ import org.jetbrains.kotlin.backend.konan.descriptors.enumEntries
 import org.jetbrains.kotlin.backend.konan.descriptors.kotlinNativeInternal
 import org.jetbrains.kotlin.backend.konan.llvm.findMainEntryPoint
 import org.jetbrains.kotlin.backend.konan.lower.TestProcessor
-import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.config.coroutinesIntrinsicsPackageFqName
 import org.jetbrains.kotlin.config.coroutinesPackageFqName
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.findClassAcrossModuleDependencies
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.ir.IrBuiltIns
@@ -292,18 +292,24 @@ internal class KonanSymbols(
     val getProgressionLast = context.getKonanInternalFunctions("getProgressionLast")
             .map { Pair(it.returnType, symbolTable.referenceSimpleFunction(it)) }.toMap()
 
-    val arrayContentToString = arrays.associateBy({ it }, { findArrayExtension(it, "contentToString") })
+    private fun arrayToExtensionSymbolMap(name: String, filter: (FunctionDescriptor) -> Boolean = { true }) = arrays.associateWith {
+        findArrayExtension(it, name, filter)
+    }
 
-    val arrayContentHashCode = arrays.associateBy({ it }, { findArrayExtension(it, "contentHashCode") })
+    val arrayContentToString = arrayToExtensionSymbolMap("contentToString") {
+        it.extensionReceiverParameter?.type?.isMarkedNullable == false
+    }
+    val arrayContentHashCode = arrayToExtensionSymbolMap("contentHashCode") {
+        it.extensionReceiverParameter?.type?.isMarkedNullable == false
+    }
 
-    private fun findArrayExtension(classSymbol: IrClassSymbol, name: String): IrSimpleFunctionSymbol =
+    private fun findArrayExtension(classSymbol: IrClassSymbol, name: String, filter: (FunctionDescriptor) -> Boolean): IrSimpleFunctionSymbol =
             irBuiltIns.findFunctions(Name.identifier(name), "kotlin", "collections")
                     .singleOrNull {
                         it.descriptor.let {
-                            it.valueParameters.isEmpty()
-                                    && it.extensionReceiverParameter?.type?.constructor?.declarationDescriptor == classSymbol.descriptor
-                                    && it.extensionReceiverParameter?.type?.isMarkedNullable == false
+                            it.extensionReceiverParameter?.type?.constructor?.declarationDescriptor == classSymbol.descriptor
                                     && !it.isExpect
+                                    && filter(it)
                         }
                     } ?: error(classSymbol.toString())
 
@@ -314,14 +320,8 @@ internal class KonanSymbols(
         return symbolTable.referenceFunction(descriptor)
     }
     
-    val copyInto = arrays.map { symbol ->
-        val funSymbol = irBuiltIns.findFunctions(Name.identifier("copyInto"), StandardNames.COLLECTIONS_PACKAGE_FQ_NAME)
-                .single {
-                    !it.descriptor.isExpect &&
-                            it.descriptor.extensionReceiverParameter?.type?.constructor?.declarationDescriptor == symbol.descriptor
-                }
-        symbol to funSymbol
-    }.toMap()
+    val copyInto = arrayToExtensionSymbolMap("copyInto")
+    val copyOf = arrayToExtensionSymbolMap("copyOf") { it.valueParameters.isEmpty() }
 
     val arrayGet = arrays.associateWith { it.descriptor.unsubstitutedMemberScope
             .getContributedFunctions(Name.identifier("get"), NoLookupLocation.FROM_BACKEND)

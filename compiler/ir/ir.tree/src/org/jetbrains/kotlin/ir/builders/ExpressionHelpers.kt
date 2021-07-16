@@ -10,11 +10,8 @@ import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.*
 import org.jetbrains.kotlin.ir.symbols.*
-import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.types.typeWith
-import org.jetbrains.kotlin.ir.util.isImmutable
-import org.jetbrains.kotlin.ir.util.parentAsClass
-import org.jetbrains.kotlin.ir.util.render
+import org.jetbrains.kotlin.ir.types.*
+import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.utils.addToStdlib.assertedCast
 
@@ -375,3 +372,37 @@ inline fun IrBuilderWithScope.irBlockBody(
         endOffset
     ).blockBody(body)
 
+fun IrBuilderWithScope.irStaticallyInitializedConstant(value: IrConst<*>) =
+    IrStaticallyInitializedConstantImpl(startOffset, endOffset, value)
+
+fun IrBuilderWithScope.irStaticallyInitializedIntrinsic(expression: IrExpression) =
+    IrStaticallyInitializedIntrinsicImpl(startOffset, endOffset, expression)
+
+fun IrBuilderWithScope.irStaticallyInitializedArray(type: IrType, elements: List<IrStaticallyInitializedValue>) =
+    IrStaticallyInitializedArrayImpl(
+        startOffset, endOffset,
+        type,
+        elements
+    )
+
+fun IrBuilderWithScope.irStaticallyInitializedObject(
+    type: IrType,
+    elements: Map<String, IrStaticallyInitializedValue>) : IrStaticallyInitializedValue {
+    val superSequence = generateSequence(type.getClass()!!) {
+        it.superTypes.asSequence()
+            .mapNotNull { type -> type.classOrNull?.owner?.takeIf { clazz -> !type.isAny() && !clazz.isInterface } }
+            .singleOrNull()
+    }
+    return IrStaticallyInitializedObjectImpl(
+        startOffset, endOffset,
+        type,
+        superSequence
+            .flatMap { it.properties.mapNotNull { it.backingField } }
+            .associate {
+                it.symbol to
+                        (elements[it.name.asString()] ?: throw IllegalArgumentException("No value for field named ${it.name} provided"))
+            }
+            .takeIf { it.size == elements.size }
+            ?: throw IllegalArgumentException("Too many values provided for ${type.render()}")
+    )
+}
