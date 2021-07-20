@@ -1819,6 +1819,16 @@ sealed class KtFirDiagnostic<PSI : PsiElement> : KtDiagnosticWithPsi<PSI> {
         abstract val property: KtSymbol
     }
 
+    abstract class SenselessComparison : KtFirDiagnostic<KtBinaryExpression>() {
+        override val diagnosticClass get() = SenselessComparison::class
+        abstract val expression: KtExpression
+        abstract val compareResult: Boolean
+    }
+
+    abstract class SenselessNullInWhen : KtFirDiagnostic<KtElement>() {
+        override val diagnosticClass get() = SenselessNullInWhen::class
+    }
+
     abstract class UnsafeCall : KtFirDiagnostic<PsiElement>() {
         override val diagnosticClass get() = UnsafeCall::class
         abstract val receiverType: KtType
