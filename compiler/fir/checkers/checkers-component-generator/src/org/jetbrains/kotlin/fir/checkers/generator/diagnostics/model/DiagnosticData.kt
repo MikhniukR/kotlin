@@ -80,6 +80,7 @@ enum class PositioningStrategy(private val strategy: String? = null) {
     NOT_SUPPORTED_IN_INLINE_MOST_RELEVANT,
     INCOMPATIBLE_DECLARATION,
     ACTUAL_DECLARATION_NAME,
+    INLINE_PARAMETER_MODIFIER,
 
     ;
 
