@@ -10,13 +10,15 @@ fun case_1(value_1: Any?) {
 // TESTCASE NUMBER: 2
 fun case_2(value_1: Int?) {
     funWithReturnsAndInvertCondition(value_1 != null)
-    println(value_1<!UNSAFE_CALL!>.<!>inc())
+    println(value_1.inc()) // inc resolves to compiler/tests-spec/testData/diagnostics/helpers/classes.kt which accepts `Class?`
+    println(value_1<!UNSAFE_CALL!>.<!>unaryPlus())
 }
 
 // TESTCASE NUMBER: 3
 fun case_3(value_1: Int?) {
     funWithReturns(value_1 == null)
-    println(value_1<!UNSAFE_CALL!>.<!>inc())
+    println(value_1.inc()) // inc resolves to compiler/tests-spec/testData/diagnostics/helpers/classes.kt which accepts `Class?`
+    println(value_1<!UNSAFE_CALL!>.<!>unaryPlus())
 }
 
 // TESTCASE NUMBER: 4
@@ -43,7 +45,7 @@ object case_7_object {
 }
 fun case_7() {
     funWithReturns(case_7_object.prop_1 == null)
-    case_7_object.prop_1<!UNSAFE_CALL!>.<!>inc()
+    case_7_object.prop_1.inc()
 }
 
 // TESTCASE NUMBER: 8
