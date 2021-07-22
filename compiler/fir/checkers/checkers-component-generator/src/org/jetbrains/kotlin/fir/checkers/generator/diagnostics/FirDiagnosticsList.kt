@@ -1200,6 +1200,8 @@ object DIAGNOSTICS_LIST : DiagnosticList("FirErrors") {
         val ILLEGAL_INLINE_PARAMETER_MODIFIER by error<KtElement>(PositioningStrategy.INLINE_PARAMETER_MODIFIER)
 
         val INLINE_SUSPEND_FUNCTION_TYPE_UNSUPPORTED by error<KtParameter>()
+
+        val REDUNDANT_INLINE_SUSPEND_FUNCTION_TYPE by warning<KtElement>(PositioningStrategy.SUSPEND_MODIFIER)
     }
 
     val IMPORTS by object : DiagnosticGroup("Imports") {
