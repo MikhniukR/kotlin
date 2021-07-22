@@ -2234,6 +2234,10 @@ sealed class KtFirDiagnostic<PSI : PsiElement> : KtDiagnosticWithPsi<PSI> {
         override val diagnosticClass get() = IllegalInlineParameterModifier::class
     }
 
+    abstract class InlineSuspendFunctionTypeUnsupported : KtFirDiagnostic<KtParameter>() {
+        override val diagnosticClass get() = InlineSuspendFunctionTypeUnsupported::class
+    }
+
     abstract class CannotAllUnderImportFromSingleton : KtFirDiagnostic<KtImportDirective>() {
         override val diagnosticClass get() = CannotAllUnderImportFromSingleton::class
         abstract val objectName: Name
