@@ -25,7 +25,8 @@ class FirExpressionWithSmartcastToNullImpl(
     override var originalExpression: FirQualifiedAccessExpression,
     override val smartcastType: FirTypeRef,
     override val typesFromSmartCast: Collection<ConeKotlinType>,
-    override val smartcastStability: SmartcastStability
+    override val smartcastStability: SmartcastStability,
+    override val smartcastTypeWithoutNullableNothing: FirTypeRef,
 ) : FirExpressionWithSmartcastToNull() {
     init {
         assert(originalExpression.typeRef is FirResolvedTypeRef)
