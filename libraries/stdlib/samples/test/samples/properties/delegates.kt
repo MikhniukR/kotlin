@@ -23,7 +23,7 @@ import kotlin.test.*
 class Delegates {
     @Sample
     fun vetoableDelegate() {
-        var max: Int by Delegates.vetoable(0) { property, oldValue, newValue ->
+        var max: Int by Delegates.vetoable(0) { _, oldValue, newValue ->
             newValue > oldValue
         }
 
@@ -38,7 +38,7 @@ class Delegates {
 
     @Sample
     fun throwVetoableDelegate() {
-        var max: Int by Delegates.vetoable(0) { property, oldValue, newValue ->
+        var max: Int by Delegates.vetoable(0) { _, oldValue, newValue ->
             if (newValue > oldValue) true else throw IllegalArgumentException("New value must be larger than old value.")
         }
 
@@ -63,7 +63,7 @@ class Delegates {
     @Sample
     fun observableDelegate() {
         var observed = false
-        var max: Int by Delegates.observable(0) { property, oldValue, newValue ->
+        var max: Int by Delegates.observable(0) { _, _, _ ->
             observed = true
         }
 

@@ -33,7 +33,7 @@ class UseAutoCloseableResourceTest {
 
     @Test fun closeFails() {
         val e = assertFails {
-            Resource(faultyClose = true).use { "" }
+            Resource(faultyClose = true).use { }
         }
         assertTrue(e is IOException)
     }

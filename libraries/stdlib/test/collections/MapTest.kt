@@ -463,7 +463,7 @@ class MapTest {
         doTest("HashMap", mapLetterToIndex.toMap(HashMap()), "c", 2)
         doTest("LinkedHashMap", mapLetterToIndex.toMap(LinkedHashMap()), "d", 3)
 
-        val builtMap = buildMap {
+        buildMap {
             putAll(mapLetterToIndex)
             doTest("MapBuilder", this, "z", 25)
         }
@@ -479,7 +479,10 @@ class MapTest {
         assertEquals("Alice", firstAdult)
         assertEquals("Alice", firstAdultOrNull)
 
-        assertFailsWith<NoSuchElementException> { val firstChild = map.firstNotNullOf { (name, age) -> name.takeIf { age <= 11 } } }
+        assertFailsWith<NoSuchElementException> {
+            map.firstNotNullOf { (name, age) -> name.takeIf { age <= 11 } }
+            Unit
+        }
         val firstChildOrNull = map.firstNotNullOfOrNull { (name, age) -> name.takeIf { age <= 11 } }
 
         assertNull(firstChildOrNull)

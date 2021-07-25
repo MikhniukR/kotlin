@@ -63,12 +63,14 @@ class PrimitiveMapJsTest : MapJsTest() {
         val map = stringMapOf("k" to null)
         assertEquals(1, map.size)
 
+        @Suppress("IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION")
         map.put("k", null)
         assertEquals(1, map.size)
 
         map["k"] = null
         assertEquals(1, map.size)
 
+        @Suppress("IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION")
         map.remove("k")
         assertEquals(0, map.size)
     }

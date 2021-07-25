@@ -618,7 +618,10 @@ class Collections {
             assertPrints(largeArea, "18")
             assertPrints(largeAreaOrNull, "18")
 
-            assertFailsWith<NoSuchElementException> { val evenLargerArea = rectangles.firstNotNullOf { it.area.takeIf { area -> area >= 50 } } }
+            assertFailsWith<NoSuchElementException> {
+                rectangles.firstNotNullOf { it.area.takeIf { area -> area >= 50 } }
+                Unit
+            }
             val evenLargerAreaOrNull = rectangles.firstNotNullOfOrNull { it.area.takeIf { area -> area >= 50 } }
 
             assertPrints(evenLargerAreaOrNull, "null")
