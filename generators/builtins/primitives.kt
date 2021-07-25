@@ -104,7 +104,10 @@ class GeneratePrimitives(out: PrintWriter) : BuiltInsSourceGenerator(out) {
         PrimitiveType.SHORT -> listOf(java.lang.Short.MIN_VALUE, java.lang.Short.MAX_VALUE)
         PrimitiveType.LONG -> listOf((java.lang.Long.MIN_VALUE + 1).toString() + "L - 1L", java.lang.Long.MAX_VALUE.toString() + "L")
         PrimitiveType.DOUBLE -> listOf(java.lang.Double.MIN_VALUE, java.lang.Double.MAX_VALUE, "1.0/0.0", "-1.0/0.0", "-(0.0/0.0)")
-        PrimitiveType.FLOAT -> listOf(java.lang.Float.MIN_VALUE, java.lang.Float.MAX_VALUE, "1.0F/0.0F", "-1.0F/0.0F", "-(0.0F/0.0F)").map { it as? String ?: "${it}F" }
+        PrimitiveType.FLOAT -> listOf(java.lang.Float.MIN_VALUE, java.lang.Float.MAX_VALUE, "1.0F/0.0F", "-1.0F/0.0F", "-(0.0F/0.0F)").map {
+            @Suppress("CAST_NEVER_SUCCEEDS") // KT-35687
+            it as? String ?: "${it}F"
+        }
         else -> throw IllegalArgumentException("type: $type")
     }
 
@@ -195,7 +198,7 @@ class GeneratePrimitives(out: PrintWriter) : BuiltInsSourceGenerator(out) {
     private fun generateDoc(kind: PrimitiveType) {
         out.println("/**")
         out.println(" * Represents a ${typeDescriptions[kind]}.")
-        out.println(" * On the JVM, non-nullable values of this type are represented as values of the primitive type `${kind.name.toLowerCase()}`.")
+        out.println(" * On the JVM, non-nullable values of this type are represented as values of the primitive type `${kind.name.lowercase()}`.")
         out.println(" */")
     }
 
