@@ -179,14 +179,14 @@ class BuildCacheIT : BaseGradleIT() {
             )
 
             // First build, should be stored into the build cache:
-            build(options = options, params = *arrayOf("clean", ":app:build")) {
+            build(options = options, params = arrayOf("clean", ":app:build")) {
                 assertSuccessful()
                 assertTaskPackedToCache(":app:kaptGenerateStubsKotlin")
                 assertTaskPackedToCache(":app:kaptKotlin")
             }
 
             // A cache hit: a clean build without any changes to the project
-            build(options = options, params = *arrayOf("clean", ":app:build"), projectDir = projectToBeModified) {
+            build(options = options, params = arrayOf("clean", ":app:build"), projectDir = projectToBeModified) {
                 assertSuccessful()
                 assertContains(":app:kaptGenerateStubsKotlin FROM-CACHE")
                 assertContains(":app:kaptKotlin FROM-CACHE")
@@ -196,7 +196,7 @@ class BuildCacheIT : BaseGradleIT() {
             File(projectToBeModified, "app/src/main/kotlin/AppClass.kt").modify {
                 it.replace("val testVal: String = \"text\"", "val testVal: Int = 1")
             }
-            build(options = options, params = *arrayOf("build"), projectDir = projectToBeModified) {
+            build(options = options, params = arrayOf("build"), projectDir = projectToBeModified) {
                 assertSuccessful()
                 assertContains("':app:kaptGenerateStubsKotlin' is not up-to-date")
                 assertContains("':app:kaptKotlin' is not up-to-date")
@@ -206,7 +206,7 @@ class BuildCacheIT : BaseGradleIT() {
             File(projectToBeModified, "app/src/main/kotlin/AppClass.kt").modify {
                 it.replace("val testVal: Int = 1", "val testVal: String = \"text\"")
             }
-            build(options = options, params = *arrayOf("clean", "build"), projectDir = projectToBeModified) {
+            build(options = options, params = arrayOf("clean", "build"), projectDir = projectToBeModified) {
                 assertSuccessful()
                 assertContains(":app:kaptGenerateStubsKotlin FROM-CACHE")
                 assertContains(":app:kaptKotlin FROM-CACHE")
