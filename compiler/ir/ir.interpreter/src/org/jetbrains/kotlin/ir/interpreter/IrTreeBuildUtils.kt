@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.IrFactoryImpl
 import org.jetbrains.kotlin.ir.declarations.impl.IrFunctionImpl
 import org.jetbrains.kotlin.ir.declarations.impl.IrVariableImpl
+import org.jetbrains.kotlin.ir.descriptors.IrBuiltIns
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.*
 import org.jetbrains.kotlin.ir.interpreter.state.Complex
@@ -85,9 +86,9 @@ internal fun State.toIrExpression(expression: IrExpression): IrExpression {
     }
 }
 
-internal fun IrFunction.createCall(): IrCall {
+internal fun IrFunction.createCall(origin: IrStatementOrigin? = null): IrCall {
     this as IrSimpleFunction
-    return IrCallImpl(SYNTHETIC_OFFSET, SYNTHETIC_OFFSET, returnType, symbol, typeParameters.size, valueParameters.size)
+    return IrCallImpl(SYNTHETIC_OFFSET, SYNTHETIC_OFFSET, returnType, symbol, typeParameters.size, valueParameters.size, origin)
 }
 
 internal fun IrConstructor.createConstructorCall(): IrConstructorCall {
@@ -152,9 +153,27 @@ internal fun IrFunctionAccessExpression.shallowCopy(copyTypeArguments: Boolean =
 }
 
 internal fun IrFunctionAccessExpression.copyArgsInto(newCall: IrFunctionAccessExpression) {
+    val symbol = this.symbol.owner
     newCall.dispatchReceiver = this.dispatchReceiver
     newCall.extensionReceiver = this.extensionReceiver
     (0 until this.valueArgumentsCount)
-        .mapNotNull { this.getValueArgument(it) }
-        .forEachIndexed { i, arg -> newCall.putValueArgument(i, arg) }
+        .map { this.getValueArgument(it) }
+        .forEachIndexed { i, arg ->
+            newCall.putValueArgument(i, arg ?: IrConstImpl.constNull(SYNTHETIC_OFFSET, SYNTHETIC_OFFSET, symbol.valueParameters[i].type))
+        }
+}
+
+internal fun IrBuiltIns.irEquals(arg1: IrExpression, arg2: IrExpression): IrCall {
+    val equalsCall = this.eqeqSymbol.owner.createCall(IrStatementOrigin.EQEQ)
+    equalsCall.putValueArgument(0, arg1)
+    equalsCall.putValueArgument(1, arg2)
+    return equalsCall
+}
+
+internal fun IrBuiltIns.irIfNullThenElse(nullableArg: IrExpression, ifTrue: IrExpression, ifFalse: IrExpression): IrWhen {
+    val nullCondition = this.irEquals(nullableArg, IrConstImpl.constNull(SYNTHETIC_OFFSET, SYNTHETIC_OFFSET, this.anyNType))
+    val trueBranch = IrBranchImpl(nullCondition, ifTrue) // use default
+    val elseBranch = IrElseBranchImpl(IrConstImpl.constTrue(0, 0, this.booleanType), ifFalse)
+
+    return IrIfThenElseImpl(SYNTHETIC_OFFSET, SYNTHETIC_OFFSET, ifTrue.type).apply { branches += listOf(trueBranch, elseBranch) }
 }
