@@ -7,7 +7,6 @@ package org.jetbrains.kotlin.js.test
 
 import com.intellij.openapi.util.io.FileUtil
 import org.jetbrains.kotlin.backend.common.phaser.PhaseConfig
-import org.jetbrains.kotlin.backend.common.phaser.toPhaseMap
 import org.jetbrains.kotlin.backend.wasm.compileWasm
 import org.jetbrains.kotlin.backend.wasm.wasmPhases
 import org.jetbrains.kotlin.checkers.parseLanguageVersionSettings
@@ -46,6 +45,7 @@ abstract class BasicWasmBoxTest(
 
     private val spiderMonkey by lazy { SpiderMonkeyEngine() }
 
+    @Suppress("UNUSED_PARAMETER")
     fun doTestWithCoroutinesPackageReplacement(filePath: String, coroutinesPackage: String) {
         TODO("TestWithCoroutinesPackageReplacement are not supported")
     }
@@ -112,7 +112,7 @@ abstract class BasicWasmBoxTest(
         val debugMode = getBoolean("kotlin.wasm.debugMode")
 
         val phaseConfig = if (debugMode) {
-            val allPhasesSet = wasmPhases.toPhaseMap().values.toSet()
+            // val allPhasesSet = wasmPhases.toPhaseMap().values.toSet()
             val dumpOutputDir = File(outputWatFile.parent, outputWatFile.nameWithoutExtension + "-irdump")
             println("\n ------ Dumping phases to file://$dumpOutputDir")
             println("\n ------  KT file://${testFile.absolutePath}")
