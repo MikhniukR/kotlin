@@ -31990,6 +31990,12 @@ public class FirOldFrontendDiagnosticsTestGenerated extends AbstractFirDiagnosti
             }
 
             @Test
+            @TestMetadata("whenOnNothing.kt")
+            public void testWhenOnNothing() throws Exception {
+                runTest("compiler/testData/diagnostics/tests/when/whenOnNothing.kt");
+            }
+
+            @Test
             @TestMetadata("WhenTypeDisjunctions.kt")
             public void testWhenTypeDisjunctions() throws Exception {
                 runTest("compiler/testData/diagnostics/tests/when/WhenTypeDisjunctions.kt");
