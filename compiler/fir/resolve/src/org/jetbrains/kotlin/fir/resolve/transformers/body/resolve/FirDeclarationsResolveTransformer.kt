@@ -121,7 +121,14 @@ open class FirDeclarationsResolveTransformer(transformer: FirBodyResolveTransfor
             property.transformStatus(this, property.resolveStatus().mode())
             property.getter?.let { it.transformStatus(this, it.resolveStatus(containingProperty = property).mode()) }
             property.setter?.let { it.transformStatus(this, it.resolveStatus(containingProperty = property).mode()) }
-            return transformLocalVariable(property)
+
+            return transformLocalVariable(property).also {
+                // Update `<unary>` property type with smartcast so that any reference of `<unary>` has the right type.
+                val initializer = property.initializer
+                if (property.name == Name.special("<unary>") && initializer?.isStableSmartcast() == true) {
+                    property.replaceReturnTypeRef(initializer.typeRef)
+                }
+            }
         }
 
         val returnTypeRef = property.returnTypeRef
@@ -882,4 +889,5 @@ open class FirDeclarationsResolveTransformer(transformer: FirBodyResolveTransfor
 
     private val FirFunction.bodyResolved: Boolean
         get() = body !is FirLazyBlock && body?.typeRef is FirResolvedTypeRef
+
 }

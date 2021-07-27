@@ -203,11 +203,19 @@ abstract class PersistentLogicSystem(context: ConeInferenceContext) : LogicSyste
     }
 
     override fun removeLocalVariableAlias(flow: PersistentFlow, alias: RealVariable) {
-        val original = flow.directAliasMap[alias]?.variable ?: return
-        flow.directAliasMap = flow.directAliasMap.remove(alias)
-        val variables = flow.backwardsAliasMap.getValue(original)
-        flow.backwardsAliasMap = flow.backwardsAliasMap.put(original, variables - alias)
+        val original = flow.directAliasMap[alias]?.variable
+        if (original != null) {
+            flow.directAliasMap = flow.directAliasMap.remove(alias)
+            val variables = flow.backwardsAliasMap.getValue(original)
+            flow.backwardsAliasMap = flow.backwardsAliasMap.put(original, variables - alias)
+        }
+        val backAliases = flow.backwardsAliasMap[alias] ?: emptyList()
+        flow.backwardsAliasMap = flow.backwardsAliasMap.remove(alias)
+        for (backAlias in backAliases) {
+            flow.directAliasMap = flow.directAliasMap.remove(backAlias)
+        }
     }
+
 
     @OptIn(DfaInternals::class)
     private fun PersistentFlow.getApprovedTypeStatements(variable: RealVariable): MutableTypeStatement {
