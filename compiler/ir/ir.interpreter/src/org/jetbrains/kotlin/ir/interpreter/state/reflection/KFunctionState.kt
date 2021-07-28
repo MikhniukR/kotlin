@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.ir.interpreter.stack.Variable
 import org.jetbrains.kotlin.ir.interpreter.state.StateWithClosure
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.SpecialNames
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
@@ -65,7 +66,7 @@ internal class KFunctionState(val irFunction: IrFunction, override val irClass: 
             .toIntOrNull()
     }
 
-    private fun isLambda(): Boolean = irFunction.name.let { it == Name.special("<anonymous>") || it == Name.special("<no name provided>") }
+    private fun isLambda(): Boolean = irFunction.name.let { it == SpecialNames.ANONYMOUS || it == Name.special("<no name provided>") }
 
     override fun toString(): String {
         return if (isLambda()) renderLambda(irFunction) else renderFunction(irFunction)
