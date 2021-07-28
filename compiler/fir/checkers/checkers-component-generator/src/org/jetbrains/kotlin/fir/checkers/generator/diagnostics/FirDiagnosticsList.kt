@@ -16,8 +16,7 @@ import org.jetbrains.kotlin.diagnostics.WhenMissingCase
 import org.jetbrains.kotlin.fir.FirModuleData
 import org.jetbrains.kotlin.fir.PrivateForInline
 import org.jetbrains.kotlin.fir.checkers.generator.diagnostics.model.*
-import org.jetbrains.kotlin.fir.declarations.*
-import org.jetbrains.kotlin.fir.expressions.FirEqualityOperatorCall
+import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
 import org.jetbrains.kotlin.fir.expressions.FirExpression
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.*
@@ -952,7 +951,7 @@ object DIAGNOSTICS_LIST : DiagnosticList("FirErrors") {
         val INITIALIZATION_BEFORE_DECLARATION by error<KtExpression>() {
             parameter<Symbol>("property")
         }
-        val SENSELESS_COMPARISON by warning<KtBinaryExpression> {
+        val SENSELESS_COMPARISON by warning<KtExpression> {
             parameter<FirExpression>("expression")
             parameter<Boolean>("compareResult")
         }
