@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.fir.types.impl.*
 import org.jetbrains.kotlin.lexer.KtTokens.*
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.SpecialNames
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.*
 import org.jetbrains.kotlin.psi.stubs.elements.KtStubElementTypes
@@ -872,7 +873,7 @@ open class RawFirBuilder(
                                 typeParameters
                             )
                             // Use ANONYMOUS_OBJECT_NAME for the owner class id for enum entry declarations (see KT-42351)
-                            withChildClassName(ANONYMOUS_OBJECT_NAME, forceLocalContext = true, isExpect = false) {
+                            withChildClassName(SpecialNames.ANONYMOUS, forceLocalContext = true, isExpect = false) {
                                 for (declaration in ktEnumEntry.declarations) {
                                     declarations += declaration.toFirDeclaration(
                                         correctedEnumSelfTypeRef,
@@ -1032,7 +1033,7 @@ open class RawFirBuilder(
 
         override fun visitObjectLiteralExpression(expression: KtObjectLiteralExpression, data: Unit): FirElement {
             val objectDeclaration = expression.objectDeclaration
-            return withChildClassName(ANONYMOUS_OBJECT_NAME, forceLocalContext = true, isExpect = false) {
+            return withChildClassName(SpecialNames.ANONYMOUS, forceLocalContext = true, isExpect = false) {
                 buildAnonymousObjectExpression {
                     val sourceElement = objectDeclaration.toFirSourceElement()
                     source = sourceElement
@@ -1055,7 +1056,7 @@ open class RawFirBuilder(
                             null,
                             ClassKind.CLASS,
                             containerTypeParameters = emptyList(),
-                        containingClassIsExpectClass = false
+                            containingClassIsExpectClass = false
                         )
 
                         for (declaration in objectDeclaration.declarations) {
@@ -1223,7 +1224,7 @@ open class RawFirBuilder(
                 for (valueParameter in literal.valueParameters) {
                     val multiDeclaration = valueParameter.destructuringDeclaration
                     valueParameters += if (multiDeclaration != null) {
-                        val name = DESTRUCTURING_NAME
+                        val name = SpecialNames.DESTRUCT
                         val multiParameter = buildValueParameter {
                             source = valueParameter.toFirSourceElement()
                             moduleData = baseModuleData
@@ -1862,7 +1863,7 @@ open class RawFirBuilder(
                 source = fakeSource
                 val rangeSource = expression.loopRange?.toFirSourceElement(FirFakeSourceElementKind.DesugaredForLoop)
                 val iteratorVal = generateTemporaryVariable(
-                    baseModuleData, rangeSource, ITERATOR_NAME,
+                    baseModuleData, rangeSource, SpecialNames.ITERATOR,
                     buildFunctionCall {
                         source = fakeSource
                         calleeReference = buildSimpleNamedReference {
@@ -1900,7 +1901,7 @@ open class RawFirBuilder(
                         val multiDeclaration = ktParameter.destructuringDeclaration
                         val firLoopParameter = generateTemporaryVariable(
                             moduleData = baseModuleData, source = expression.loopParameter?.toFirSourceElement(),
-                            name = if (multiDeclaration != null) DESTRUCTURING_NAME else ktParameter.nameAsSafeName,
+                            name = if (multiDeclaration != null) SpecialNames.DESTRUCT else ktParameter.nameAsSafeName,
                             initializer = buildFunctionCall {
                                 source = fakeSource
                                 calleeReference = buildSimpleNamedReference {

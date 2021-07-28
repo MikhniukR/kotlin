@@ -34,6 +34,7 @@ import org.jetbrains.kotlin.lexer.KtTokens.OPEN_QUOTE
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.SpecialNames
 import org.jetbrains.kotlin.parsing.*
 import org.jetbrains.kotlin.types.ConstantValueKind
 import org.jetbrains.kotlin.util.OperatorNameConventions
@@ -108,7 +109,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
 
     fun callableIdForName(name: Name) =
         when {
-            context.className.shortNameOrSpecial() == ANONYMOUS_OBJECT_NAME -> CallableId(ANONYMOUS_CLASS_ID, name)
+            context.className.shortNameOrSpecial() == SpecialNames.ANONYMOUS -> CallableId(ANONYMOUS_CLASS_ID, name)
             context.className.isRoot && !context.inLocalContext -> CallableId(context.packageFqName, name)
             context.inLocalContext -> {
                 val pathFqName =
@@ -487,7 +488,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
             val initialValueVar = generateTemporaryVariable(
                 baseModuleData,
                 desugaredSource,
-                Name.special("<unary>"),
+                SpecialNames.UNARY,
                 unwrappedArgument.convert()
             )
 
@@ -625,7 +626,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
             val initialValueVar = generateTemporaryVariable(
                 baseModuleData,
                 desugaredSource,
-                Name.special("<unary>"),
+                SpecialNames.UNARY,
                 firArgument
             )
 
@@ -765,7 +766,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
             val initialValueVar = generateTemporaryVariable(
                 baseModuleData,
                 desugaredSource,
-                Name.special("<unary>"),
+                SpecialNames.UNARY,
                 firArgument
             )
 
@@ -1193,14 +1194,5 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
         } finally {
             context.forcedElementSourceKind = currentForced
         }
-    }
-
-    /**** Common utils ****/
-    companion object {
-        val ANONYMOUS_OBJECT_NAME = Name.special("<anonymous>")
-
-        val DESTRUCTURING_NAME = Name.special("<destruct>")
-
-        val ITERATOR_NAME = Name.special("<iterator>")
     }
 }

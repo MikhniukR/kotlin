@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.fir.types.builder.buildResolvedTypeRef
 import org.jetbrains.kotlin.fir.types.builder.buildStarProjection
 import org.jetbrains.kotlin.fir.types.builder.buildTypeProjectionWithVariance
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.SpecialNames
 import org.jetbrains.kotlin.resolve.calls.inference.ConstraintSystemBuilder
 import org.jetbrains.kotlin.resolve.calls.results.TypeSpecificityComparator
 import org.jetbrains.kotlin.resolve.calls.tasks.ExplicitReceiverKind
@@ -390,7 +391,7 @@ class FirCallResolver(
         delegatedConstructorCall: FirDelegatedConstructorCall,
         constructedType: ConeClassLikeType
     ): FirDelegatedConstructorCall {
-        val name = Name.special("<init>")
+        val name = SpecialNames.INIT
         val symbol = constructedType.lookupTag.toSymbol(components.session)
         val typeArguments =
             constructedType.typeArguments.take((symbol?.fir as? FirRegularClass)?.typeParameters?.count { it is FirTypeParameter } ?: 0)

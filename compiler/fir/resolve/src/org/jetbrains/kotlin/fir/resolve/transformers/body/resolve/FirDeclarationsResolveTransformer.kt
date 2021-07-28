@@ -47,6 +47,7 @@ import org.jetbrains.kotlin.fir.visitors.FirDefaultTransformer
 import org.jetbrains.kotlin.fir.visitors.FirTransformer
 import org.jetbrains.kotlin.fir.visitors.transformSingle
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.SpecialNames
 
 open class FirDeclarationsResolveTransformer(transformer: FirBodyResolveTransformer) : FirPartialBodyResolveTransformer(transformer) {
     private val statusResolver: FirStatusResolver = FirStatusResolver(session, scopeSession)
@@ -125,7 +126,7 @@ open class FirDeclarationsResolveTransformer(transformer: FirBodyResolveTransfor
             return transformLocalVariable(property).also {
                 // Update `<unary>` property type with smartcast so that any reference of `<unary>` has the right type.
                 val initializer = property.initializer
-                if (property.name == Name.special("<unary>") && initializer?.isStableSmartcast() == true) {
+                if (property.name == SpecialNames.UNARY && initializer?.isStableSmartcast() == true) {
                     property.replaceReturnTypeRef(initializer.typeRef)
                 }
             }

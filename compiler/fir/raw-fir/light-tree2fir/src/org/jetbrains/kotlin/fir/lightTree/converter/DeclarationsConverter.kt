@@ -561,7 +561,7 @@ class DeclarationsConverter(
      * @see org.jetbrains.kotlin.fir.builder.RawFirBuilder.Visitor.visitObjectLiteralExpression
      */
     fun convertObjectLiteral(objectLiteral: LighterASTNode): FirElement {
-        return withChildClassName(ANONYMOUS_OBJECT_NAME, isExpect = false) {
+        return withChildClassName(SpecialNames.ANONYMOUS, isExpect = false) {
             buildAnonymousObjectExpression {
                 val objectDeclaration = objectLiteral.getChildNodesByType(OBJECT_DECLARATION).first()
                 val sourceElement = objectDeclaration.toFirSourceElement()
@@ -623,7 +623,11 @@ class DeclarationsConverter(
                     )
                     //parse primary constructor
                     convertPrimaryConstructor(
-                        primaryConstructor, delegatedSelfType.source, classWrapper, delegatedConstructorSource, containingClassIsExpectClass = false
+                        primaryConstructor,
+                        delegatedSelfType.source,
+                        classWrapper,
+                        delegatedConstructorSource,
+                        containingClassIsExpectClass = false
                     )?.let { this.declarations += it.firConstructor }
                     delegateFields?.let { this.declarations += it }
 
@@ -714,7 +718,7 @@ class DeclarationsConverter(
                         )?.let { declarations += it.firConstructor }
                         classBodyNode?.also {
                             // Use ANONYMOUS_OBJECT_NAME for the owner class id of enum entry declarations
-                            withChildClassName(ANONYMOUS_OBJECT_NAME, forceLocalContext = true, isExpect = false) {
+                            withChildClassName(SpecialNames.ANONYMOUS, forceLocalContext = true, isExpect = false) {
                                 declarations += convertClassBody(it, enumClassWrapper)
                             }
                         }
