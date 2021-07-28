@@ -14,11 +14,9 @@ import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.deserialization.*
 import org.jetbrains.kotlin.fir.expressions.*
 import org.jetbrains.kotlin.fir.java.JavaSymbolProvider
-import org.jetbrains.kotlin.fir.java.topLevelName
 import org.jetbrains.kotlin.fir.languageVersionSettings
 import org.jetbrains.kotlin.fir.scopes.FirKotlinScopeProvider
 import org.jetbrains.kotlin.fir.symbols.impl.*
-import org.jetbrains.kotlin.load.java.JavaClassFinder
 import org.jetbrains.kotlin.load.kotlin.*
 import org.jetbrains.kotlin.load.kotlin.header.KotlinClassHeader
 import org.jetbrains.kotlin.metadata.ProtoBuf
@@ -41,15 +39,13 @@ class KotlinDeserializedJvmSymbolsProvider(
     private val packagePartProvider: PackagePartProvider,
     private val kotlinClassFinder: KotlinClassFinder,
     private val javaSymbolProvider: JavaSymbolProvider,
-    javaClassFinder: JavaClassFinder,
 ) : AbstractFirDeserializedSymbolsProvider(session, moduleDataProvider, kotlinScopeProvider) {
-    private val knownNameInPackageCache = KnownNameInPackageCache(session, javaClassFinder)
     private val annotationsLoader = AnnotationsLoader(session)
 
     override fun computePackagePartsInfos(packageFqName: FqName): List<PackagePartsCacheData> {
         return packagePartProvider.findPackageParts(packageFqName.asString()).mapNotNull { partName ->
             val classId = ClassId.topLevel(JvmClassName.byInternalName(partName).fqNameForTopLevelClassMaybeWithDollars)
-            if (knownNameInPackageCache.hasNoTopLevelClassOf(classId)) return@mapNotNull null
+            if (!javaSymbolProvider.hasTopLevelClassOf(classId)) return@mapNotNull null
             val (kotlinJvmBinaryClass, byteContent) =
                 kotlinClassFinder.findKotlinClassOrContent(classId) as? KotlinClassFinder.Result.KotlinClass ?: return@mapNotNull null
 
@@ -92,7 +88,7 @@ class KotlinDeserializedJvmSymbolsProvider(
         get() = classHeader.isPreRelease
 
     override fun extractClassMetadata(classId: ClassId, parentContext: FirDeserializationContext?): ClassMetadataFindResult? {
-        if (knownNameInPackageCache.hasNoTopLevelClassOf(classId)) return null
+        if (!javaSymbolProvider.hasTopLevelClassOf(classId)) return null
         val result = try {
             kotlinClassFinder.findKotlinClassOrContent(classId)
         } catch (e: ProcessCanceledException) {
@@ -150,22 +146,6 @@ class KotlinDeserializedJvmSymbolsProvider(
         val data = kotlinJvmBinaryClass.classHeader.data ?: return null
         val strings = kotlinJvmBinaryClass.classHeader.strings ?: return null
         return JvmProtoBufUtil.readClassDataFrom(data, strings)
-    }
-
-    private class KnownNameInPackageCache(
-        session: FirSession,
-        private val javaClassFinder: JavaClassFinder
-    ) {
-        private val knownClassNamesInPackage = session.firCachesFactory.createCache(javaClassFinder::knownClassNamesInPackage)
-
-        /**
-         * This function returns true if we are sure that no top-level class with this id is available
-         * If it returns false, it means we can say nothing about this id
-         */
-        fun hasNoTopLevelClassOf(classId: ClassId): Boolean {
-            val knownNames = knownClassNamesInPackage.getValue(classId.packageFqName) ?: return false
-            return classId.relativeClassName.topLevelName() !in knownNames
-        }
     }
 
     private fun String?.toPath(): Path? {

@@ -208,8 +208,7 @@ internal object FirIdeSessionFactory {
                                 kotlinScopeProvider,
                                 packagePartProvider,
                                 kotlinClassFinder,
-                                javaSymbolProvider,
-                                javaClassFinder
+                                javaSymbolProvider
                             )
                         )
                     )

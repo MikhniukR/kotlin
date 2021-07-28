@@ -600,7 +600,7 @@ class JavaSymbolProvider(
         }
     }
 
-    private fun hasTopLevelClassOf(classId: ClassId): Boolean {
+    internal fun hasTopLevelClassOf(classId: ClassId): Boolean {
         val knownNames = knownClassNamesInPackage.getValue(classId.packageFqName) ?: return true
         return classId.relativeClassName.topLevelName() in knownNames
     }

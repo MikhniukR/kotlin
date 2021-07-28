@@ -254,19 +254,13 @@ object FirSessionFactory {
     ): KotlinDeserializedJvmSymbolsProvider {
 
         val kotlinClassFinder = VirtualFileFinderFactory.getInstance(project).create(scope)
-        val javaClassFinder = JavaClassFinderImpl().apply {
-            this.setProjectInstance(project)
-            this.setScope(scope)
-        }
-
         return KotlinDeserializedJvmSymbolsProvider(
             librarySession,
             moduleDataProvider,
             kotlinScopeProvider,
             packagePartProvider,
             kotlinClassFinder,
-            javaSymbolProvider,
-            javaClassFinder
+            javaSymbolProvider
         )
     }
 
