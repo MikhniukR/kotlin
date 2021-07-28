@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
+#include <array>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "KAssert.h"
 #include "Exceptions.h"
+#include "Format.h"
 #include "Memory.h"
 #include "Natives.h"
 #include "KString.h"
@@ -70,9 +72,9 @@ template <typename T> OBJ_GETTER(Kotlin_toStringRadix, T value, KInt radix) {
 extern "C" {
 
 OBJ_GETTER(Kotlin_Byte_toString, KByte value) {
-  char cstring[8];
-  konan::snprintf(cstring, sizeof(cstring), "%d", value);
-  RETURN_RESULT_OF(CreateStringFromCString, cstring);
+    std::array<char, 8> cstring;
+    kotlin::FormatToSpan(cstring, "%d", value);
+    RETURN_RESULT_OF(CreateStringFromCString, cstring.data());
 }
 
 OBJ_GETTER(Kotlin_Char_toString, KChar value) {
@@ -82,15 +84,15 @@ OBJ_GETTER(Kotlin_Char_toString, KChar value) {
 }
 
 OBJ_GETTER(Kotlin_Short_toString, KShort value) {
-  char cstring[8];
-  konan::snprintf(cstring, sizeof(cstring), "%d", value);
-  RETURN_RESULT_OF(CreateStringFromCString, cstring);
+    std::array<char, 8> cstring;
+    kotlin::FormatToSpan(cstring, "%d", value);
+    RETURN_RESULT_OF(CreateStringFromCString, cstring.data());
 }
 
 OBJ_GETTER(Kotlin_Int_toString, KInt value) {
-  char cstring[16];
-  konan::snprintf(cstring, sizeof(cstring), "%d", value);
-  RETURN_RESULT_OF(CreateStringFromCString, cstring);
+    std::array<char, 16> cstring;
+    kotlin::FormatToSpan(cstring, "%d", value);
+    RETURN_RESULT_OF(CreateStringFromCString, cstring.data());
 }
 
 OBJ_GETTER(Kotlin_Int_toStringRadix, KInt value, KInt radix) {
@@ -98,9 +100,9 @@ OBJ_GETTER(Kotlin_Int_toStringRadix, KInt value, KInt radix) {
 }
 
 OBJ_GETTER(Kotlin_Long_toString, KLong value) {
-  char cstring[32];
-  konan::snprintf(cstring, sizeof(cstring), "%lld", static_cast<long long>(value));
-  RETURN_RESULT_OF(CreateStringFromCString, cstring);
+    std::array<char, 32> cstring;
+    kotlin::FormatToSpan(cstring, "%lld", static_cast<long long>(value));
+    RETURN_RESULT_OF(CreateStringFromCString, cstring.data());
 }
 
 OBJ_GETTER(Kotlin_Long_toStringRadix, KLong value, KInt radix) {
@@ -108,9 +110,9 @@ OBJ_GETTER(Kotlin_Long_toStringRadix, KLong value, KInt radix) {
 }
 
 OBJ_GETTER(Kotlin_DurationValue_formatToExactDecimals, KDouble value, KInt decimals) {
-  char cstring[40]; // log(2^62*1_000_000) + 2 (sign, decimal point) + 12 (max decimals)
-  konan::snprintf(cstring, sizeof(cstring), "%.*f", decimals, value);
-  RETURN_RESULT_OF(CreateStringFromCString, cstring)
+    std::array<char, 40> cstring;
+    kotlin::FormatToSpan(cstring, "%.*f", decimals, value);
+    RETURN_RESULT_OF(CreateStringFromCString, cstring.data());
 }
 
 

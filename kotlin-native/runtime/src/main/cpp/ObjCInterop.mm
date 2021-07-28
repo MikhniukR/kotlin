@@ -19,6 +19,7 @@
 #import <Foundation/NSException.h>
 #import <objc/objc-exception.h>
 
+#include <array>
 #include <objc/objc.h>
 #include <objc/runtime.h>
 #include <objc/message.h>
@@ -29,6 +30,7 @@
 #include "Memory.h"
 #include "MemorySharedRefs.hpp"
 
+#include "Format.h"
 #include "Natives.h"
 #include "ObjCInterop.h"
 #include "ObjCExportPrivate.h"
@@ -328,9 +330,9 @@ void* CreateKotlinObjCClass(const KotlinObjCClassInfo* info) {
   const TypeInfo* actualTypeInfo = Kotlin_ObjCExport_createTypeInfoWithKotlinFieldsFrom(newClass, info->typeInfo);
 
   int bodySize = sizeof(BackRefFromAssociatedObject);
-  char bodyTypeEncoding[16];
-  snprintf(bodyTypeEncoding, sizeof(bodyTypeEncoding), "[%dc]", bodySize);
-  BOOL added = class_addIvar(newClass, "kotlinBody", bodySize, /* log2(align) = */ 3, bodyTypeEncoding);
+  std::array<char, 16> bodyTypeEncoding;
+  kotlin::FormatToSpan(bodyTypeEncoding, "[%dc]", bodySize);
+  BOOL added = class_addIvar(newClass, "kotlinBody", bodySize, /* log2(align) = */ 3, bodyTypeEncoding.data());
   RuntimeAssert(added == YES, "Unable to add ivar to Objective-C class");
 
   objc_registerClassPair(newClass);

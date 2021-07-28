@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+#include <array>
 #include <limits>
 #include <string.h>
 
+#include "cpp_support/Span.hpp"
 #include "KAssert.h"
 #include "Exceptions.h"
+#include "Format.h"
 #include "Memory.h"
 #include "Natives.h"
 #include "KString.h"
@@ -258,16 +261,14 @@ KInt Kotlin_StringBuilder_insertString(KRef builder, KInt distIndex, KString fro
 KInt Kotlin_StringBuilder_insertInt(KRef builder, KInt position, KInt value) {
   auto toArray = builder->array();
   RuntimeAssert(toArray->count_ >= static_cast<uint32_t>(11 + position), "must be true");
-  char cstring[12];
-  auto length = konan::snprintf(cstring, sizeof(cstring), "%d", value);
-  RuntimeAssert(length >= 0, "This should never happen"); // may be overkill
-  RuntimeAssert(static_cast<size_t>(length) < sizeof(cstring), "Unexpectedly large value"); // Can't be, but this is what sNprintf for
-  auto* from = &cstring[0];
+  std::array<char, 12> cstring;
+  kotlin::FormatToSpan(cstring, "%d", value);
+  auto* from = cstring.data();
   auto* to = CharArrayAddressOfElementAt(toArray, position);
   while (*from) {
     *to++ = *from++;
   }
-  return from - cstring;
+  return from - cstring.data();
 }
 
 
