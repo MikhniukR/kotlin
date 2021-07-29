@@ -79,6 +79,7 @@ enum class PositioningStrategy(private val strategy: String? = null) {
     DECLARATION_WITH_BODY,
     INCOMPATIBLE_DECLARATION,
     ACTUAL_DECLARATION_NAME,
+    UNREACHABLE_CODE,
 
     ;
 

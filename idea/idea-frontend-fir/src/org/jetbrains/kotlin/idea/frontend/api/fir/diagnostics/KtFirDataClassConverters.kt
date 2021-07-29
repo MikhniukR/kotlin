@@ -2582,6 +2582,18 @@ internal val KT_DIAGNOSTIC_CONVERTER = KtDiagnosticConverterBuilder.buildConvert
             token,
         )
     }
+    add(FirErrors.UNREACHABLE_CODE) { firDiagnostic ->
+        UnreachableCodeImpl(
+            firDiagnostic.a.map { firSourceElement ->
+                (firSourceElement as FirPsiSourceElement).psi
+            },
+            firDiagnostic.b.map { firSourceElement ->
+                (firSourceElement as FirPsiSourceElement).psi
+            },
+            firDiagnostic as FirPsiDiagnostic,
+            token,
+        )
+    }
     add(FirErrors.UNSAFE_CALL) { firDiagnostic ->
         UnsafeCallImpl(
             firSymbolBuilder.typeBuilder.buildKtType(firDiagnostic.a),

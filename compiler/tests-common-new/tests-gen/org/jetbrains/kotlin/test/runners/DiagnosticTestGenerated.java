@@ -5678,7 +5678,7 @@ public class DiagnosticTestGenerated extends AbstractDiagnosticTest {
 
                 @Test
                 @TestMetadata("commentsInDeadCode.kt")
-                public void testCommentsInDeadCode() throws Exception {
+                public void testCommentsInDeadCode111() throws Exception {
                     runTest("compiler/testData/diagnostics/tests/controlFlowAnalysis/deadCode/commentsInDeadCode.kt");
                 }
 
