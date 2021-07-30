@@ -727,8 +727,10 @@ object LightTreePositioningStrategies {
 
             val descendants =
                 tree.collectDescendantsOfType(node, KtTokens.IDENTIFIER) { descendant -> descendant.toString().all { it == '_' } }
-            if (descendants.isNotEmpty())
-                return descendants.map { markSingleElement(it, it, startOffset, endOffset, tree, node) }
+            if (descendants.isNotEmpty()) {
+                //todo subList here is to quickfix the bug with marking class with underscore in name and type params!
+                return descendants.map { markSingleElement(it, it, startOffset, endOffset, tree, node) }.subList(0, 1)
+            }
             return super.mark(node, startOffset, endOffset, tree)
         }
     }
@@ -839,6 +841,33 @@ object LightTreePositioningStrategies {
         //body of block node is in the separate tree, so here is hack - mark last symbol of block
         private fun lastSymbol(range: TextRange): TextRange =
             if (range.isEmpty) range else TextRange.create(range.endOffset - 1, range.endOffset)
+    }
+
+    val UNREACHABLE_CODE: LightTreePositioningStrategy = object : LightTreePositioningStrategy() {
+        override fun markFirDiagnostic(element: FirSourceElement, diagnostic: FirDiagnostic): List<TextRange> {
+            @Suppress("UNCHECKED_CAST")
+            val typed = diagnostic as FirDiagnosticWithParameters2<Set<FirSourceElement>, Set<FirSourceElement>>
+            with(UnreachableCodeLightTreeHelper(element.treeStructure)) {
+                val reachable = typed.a.map { it.lighterASTNode }.toSet()
+                val unreachable = typed.b.map { it.lighterASTNode }.toSet()
+                if (!element.lighterASTNode.hasChildrenInSet(reachable)) {
+                    return super.markFirDiagnostic(element, diagnostic)
+                }
+
+                val nodesToMark = element.lighterASTNode.getLeavesOrReachableChildren(reachable, unreachable)
+                    .removeReachableElementsWithMeaninglessSiblings(reachable)
+
+                if (nodesToMark.isEmpty()) {
+                    return super.markFirDiagnostic(element, diagnostic)
+                }
+
+                val ranges = nodesToMark.flatMap {
+                    markElement(it, element.startOffset, element.endOffset, element.treeStructure, element.lighterASTNode)
+                }
+
+                return ranges.mergeAdjacentTextRanges()
+            }
+        }
     }
 }
 
@@ -1105,6 +1134,29 @@ fun FlyweightCapableTreeStructure<LighterASTNode>.collectDescendantsOfType(
     collectDescendantByType(node)
 
     return result
+}
+
+fun FlyweightCapableTreeStructure<LighterASTNode>.traverseDescendants(
+    node: LighterASTNode,
+    acceptor: (LighterASTNode) -> Boolean
+) {
+    fun FlyweightCapableTreeStructure<LighterASTNode>.traverse(node: LighterASTNode) {
+        val childrenRef = Ref<Array<LighterASTNode?>>()
+        getChildren(node, childrenRef)
+
+        val childrenRefGet = childrenRef.get()
+        if (childrenRefGet != null) {
+            for (child in childrenRefGet) {
+                if (child != null) {
+                    if (acceptor(child)) {
+                        traverse(child)
+                    }
+                }
+            }
+        }
+    }
+
+    traverse(node)
 }
 
 fun FlyweightCapableTreeStructure<LighterASTNode>.findChildByType(node: LighterASTNode, type: TokenSet): LighterASTNode? {

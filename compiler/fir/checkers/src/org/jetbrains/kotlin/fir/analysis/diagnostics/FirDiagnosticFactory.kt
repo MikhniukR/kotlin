@@ -22,10 +22,6 @@ sealed class AbstractFirDiagnosticFactory(
     override fun toString(): String {
         return name
     }
-
-    protected fun checkMyDiagnostic(diagnostic: FirDiagnostic) {
-        require(diagnostic.factory === this) { "$diagnostic should be of this factory" }
-    }
 }
 
 class FirDiagnosticFactory0(
@@ -82,11 +78,6 @@ class FirDiagnosticFactory1<A>(
             else -> incorrectElement(element)
         }
     }
-
-    fun extractArgument(diagnostic: FirDiagnostic): A {
-        checkMyDiagnostic(diagnostic)
-        return (diagnostic as FirDiagnosticWithParameters1<A>).a
-    }
 }
 
 class FirDiagnosticFactory2<A, B>(
@@ -122,12 +113,6 @@ class FirDiagnosticFactory2<A, B>(
             )
             else -> incorrectElement(element)
         }
-    }
-
-    fun extractArguments(diagnostic: FirDiagnostic): Pair<A, B> {
-        checkMyDiagnostic(diagnostic)
-        val typed = diagnostic as FirDiagnosticWithParameters2<A, B>
-        return Pair(typed.a, typed.b)
     }
 }
 
