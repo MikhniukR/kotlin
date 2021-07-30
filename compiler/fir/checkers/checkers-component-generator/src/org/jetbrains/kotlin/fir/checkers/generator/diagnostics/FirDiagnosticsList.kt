@@ -656,11 +656,10 @@ object DIAGNOSTICS_LIST : DiagnosticList("FirErrors") {
             parameter<FirClassSymbol<*>>("classOrObject")
             parameter<FirCallableSymbol<*>>("missingDeclaration")
         }
-        val INVISIBLE_ABSTRACT_MEMBER_FROM_SUPER by error<KtClassOrObject>(PositioningStrategy.DECLARATION_NAME) {
-            parameter<FirClassSymbol<*>>("classOrObject")
-            parameter<FirCallableSymbol<*>>("invisibleDeclaration")
-        }
-        val INVISIBLE_ABSTRACT_MEMBER_FROM_SUPER_WARNING by warning<KtClassOrObject>(PositioningStrategy.DECLARATION_NAME) {
+        val INVISIBLE_ABSTRACT_MEMBER_FROM_SUPER by deprecationError<KtClassOrObject>(
+            LanguageFeature.ProhibitInvisibleAbstractMethodsInSuperclasses,
+            PositioningStrategy.DECLARATION_NAME
+        ) {
             parameter<FirClassSymbol<*>>("classOrObject")
             parameter<FirCallableSymbol<*>>("invisibleDeclaration")
         }
