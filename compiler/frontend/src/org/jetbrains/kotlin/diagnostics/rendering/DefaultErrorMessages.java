@@ -925,9 +925,7 @@ public class DefaultErrorMessages {
 
         MAP.put(TYPE_INFERENCE_PARAMETER_CONSTRAINT_ERROR, "Type inference failed: {0}", TYPE_INFERENCE_PARAMETER_CONSTRAINT_ERROR_RENDERER);
         MAP.put(TYPE_INFERENCE_INCORPORATION_ERROR, "Type inference failed. Please try to specify type arguments explicitly.");
-        MAP.put(TYPE_INFERENCE_ONLY_INPUT_TYPES.getErrorFactory(), "Type inference failed. The value of the type parameter {0} should be mentioned in input types " +
-                                                 "(argument types, receiver type or expected type). Try to specify it explicitly.", NAME);
-        MAP.put(TYPE_INFERENCE_ONLY_INPUT_TYPES.getWarningFactory(), "Type inference failed. The value of the type parameter {0} should be mentioned in input types " +
+        MAP.put(TYPE_INFERENCE_ONLY_INPUT_TYPES, "Type inference failed. The value of the type parameter {0} should be mentioned in input types " +
                                                  "(argument types, receiver type or expected type). Try to specify it explicitly.", NAME);
         MAP.put(TYPE_INFERENCE_UPPER_BOUND_VIOLATED, "{0}", TYPE_INFERENCE_UPPER_BOUND_VIOLATED_RENDERER);
         MAP.put(TYPE_INFERENCE_EXPECTED_TYPE_MISMATCH, "Type inference failed. Expected type mismatch: inferred type is {1} but {0} was expected", RENDER_TYPE, RENDER_TYPE);
