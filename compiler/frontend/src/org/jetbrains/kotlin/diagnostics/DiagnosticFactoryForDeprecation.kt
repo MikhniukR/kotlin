@@ -59,7 +59,7 @@ class DiagnosticFactoryForDeprecation1<E : PsiElement, A : Any>(
             return DiagnosticFactoryForDeprecation1(
                 featureForError,
                 warningFactory = DiagnosticFactory1.create(Severity.WARNING, positioningStrategy),
-                errorFactory = DiagnosticFactory1.create(Severity.WARNING, positioningStrategy),
+                errorFactory = DiagnosticFactory1.create(Severity.ERROR, positioningStrategy),
             )
         }
     }
@@ -84,7 +84,7 @@ class DiagnosticFactoryForDeprecation2<E : PsiElement, A : Any, B : Any>(
             return DiagnosticFactoryForDeprecation2(
                 featureForError,
                 warningFactory = DiagnosticFactory2.create(Severity.WARNING, positioningStrategy),
-                errorFactory = DiagnosticFactory2.create(Severity.WARNING, positioningStrategy),
+                errorFactory = DiagnosticFactory2.create(Severity.ERROR, positioningStrategy),
             )
         }
     }
@@ -109,7 +109,7 @@ class DiagnosticFactoryForDeprecation3<E : PsiElement, A : Any, B : Any, C : Any
             return DiagnosticFactoryForDeprecation3(
                 featureForError,
                 warningFactory = DiagnosticFactory3.create(Severity.WARNING, positioningStrategy),
-                errorFactory = DiagnosticFactory3.create(Severity.WARNING, positioningStrategy),
+                errorFactory = DiagnosticFactory3.create(Severity.ERROR, positioningStrategy),
             )
         }
     }
@@ -134,7 +134,7 @@ class DiagnosticFactoryForDeprecation4<E : PsiElement, A : Any, B : Any, C : Any
             return DiagnosticFactoryForDeprecation4(
                 featureForError,
                 warningFactory = DiagnosticFactory4.create(Severity.WARNING, positioningStrategy),
-                errorFactory = DiagnosticFactory4.create(Severity.WARNING, positioningStrategy),
+                errorFactory = DiagnosticFactory4.create(Severity.ERROR, positioningStrategy),
             )
         }
     }
