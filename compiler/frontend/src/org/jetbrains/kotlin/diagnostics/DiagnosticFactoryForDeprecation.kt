@@ -14,7 +14,7 @@ sealed class DiagnosticFactoryForDeprecation<E : PsiElement, D : Diagnostic, F :
     val warningFactory: F,
     val errorFactory: F
 ) {
-    protected fun LanguageVersionSettings.chooseFactory(): F {
+    fun LanguageVersionSettings.chooseFactory(): F {
         return if (supportsFeature(featureForError)) errorFactory else warningFactory
     }
 }
@@ -34,7 +34,7 @@ class DiagnosticFactoryForDeprecation0<E : PsiElement>(
             return DiagnosticFactoryForDeprecation0(
                 featureForError,
                 warningFactory = DiagnosticFactory0.create(Severity.WARNING, positioningStrategy),
-                errorFactory = DiagnosticFactory0.create(Severity.WARNING, positioningStrategy),
+                errorFactory = DiagnosticFactory0.create(Severity.ERROR, positioningStrategy),
             )
         }
     }

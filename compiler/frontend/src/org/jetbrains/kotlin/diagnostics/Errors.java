@@ -1216,6 +1216,9 @@ public interface Errors {
     Initializer __initializer = Initializer.INSTANCE;
 
     class Initializer {
+        private static final String WARNING = "_WARNING";
+        private static final String ERROR = "_ERROR";
+
         static {
             initializeFactoryNames(Errors.class);
         }
@@ -1224,7 +1227,6 @@ public interface Errors {
             initializeFactoryNamesAndDefaultErrorMessages(aClass, DiagnosticFactoryToRendererMap::new);
         }
 
-        @SuppressWarnings({"unchecked", "rawtypes"})
         public static void initializeFactoryNamesAndDefaultErrorMessages(
                 @NotNull Class<?> aClass,
                 @NotNull DefaultErrorMessages.Extension defaultErrorMessages
@@ -1240,8 +1242,8 @@ public interface Errors {
                         if (value instanceof DiagnosticFactoryForDeprecation) {
                             String errorName = field.getName();
                             DiagnosticFactoryForDeprecation<?, ?, ?> factory = (DiagnosticFactoryForDeprecation<?, ?, ?>) value;
-                            initializeNameAndRenderer(diagnosticToRendererMap, field.getName(), factory.getErrorFactory());
-                            initializeNameAndRenderer(diagnosticToRendererMap, field.getName() + "_WARNING", factory.getWarningFactory());
+                            initializeNameAndRenderer(diagnosticToRendererMap, field.getName() + ERROR, factory.getErrorFactory());
+                            initializeNameAndRenderer(diagnosticToRendererMap, field.getName() + WARNING, factory.getWarningFactory());
                         }
                     }
                     catch (IllegalAccessException e) {
