@@ -19,6 +19,10 @@ std_support::span<char> kotlin::FormatToSpan(std_support::span<char> buffer, con
 
 std_support::span<char> kotlin::VFormatToSpan(std_support::span<char> buffer, const char* format, std::va_list args) noexcept {
     if (buffer.empty()) return buffer;
+    if (buffer.size() == 1) {
+        buffer.front() = '\0';
+        return buffer;
+    }
     int written = konan::vsnprintf(buffer.data(), buffer.size(), format, args);
     // Consider this a failure, nothing has been written. TODO: Should this be an exception/RuntimeAssert?
     if (written < 0) return buffer;
