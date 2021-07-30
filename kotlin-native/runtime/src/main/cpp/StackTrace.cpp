@@ -5,8 +5,6 @@
 
 #include "StackTrace.hpp"
 
-#include <array>
-
 #if KONAN_NO_BACKTRACE
 // Nothing to include
 #elif USE_GCC_UNWIND
@@ -19,7 +17,6 @@
 
 #include "Common.h"
 #include "ExecFormat.h"
-#include "Format.h"
 #include "Porting.h"
 #include "SourceInfo.h"
 #include "Types.h"
@@ -129,9 +126,9 @@ KStdVector<KStdString> kotlin::GetStackTraceStrings(void* const* stackTrace, siz
             // Make empty string:
             symbol[0] = '\0';
         }
-        std::array<char, 512> line;
-        FormatToSpan(line, "%s (%p)", symbol, (void*)(intptr_t)address);
-        strings.push_back(line.data());
+        char line[512];
+        konan::snprintf(line, sizeof(line) - 1, "%s (%p)", symbol, (void*)(intptr_t)address);
+        strings.push_back(line);
     }
 #else
     if (stackTraceSize > 0) {
@@ -143,14 +140,15 @@ KStdVector<KStdString> kotlin::GetStackTraceStrings(void* const* stackTrace, siz
             auto sourceInfo = getSourceInfo(address);
             const char* symbol = symbols[index];
             const char* result;
-            std::array<char, 1024> line;
+            char line[1024];
             if (sourceInfo.fileName != nullptr) {
                 if (sourceInfo.lineNumber != -1) {
-                    FormatToSpan(line, "%s (%s:%d:%d)", symbol, sourceInfo.fileName, sourceInfo.lineNumber, sourceInfo.column);
+                    konan::snprintf(
+                            line, sizeof(line) - 1, "%s (%s:%d:%d)", symbol, sourceInfo.fileName, sourceInfo.lineNumber, sourceInfo.column);
                 } else {
-                    FormatToSpan(line, "%s (%s:<unknown>)", symbol, sourceInfo.fileName);
+                    konan::snprintf(line, sizeof(line) - 1, "%s (%s:<unknown>)", symbol, sourceInfo.fileName);
                 }
-                result = line.data();
+                result = line;
             } else {
                 result = symbol;
             }

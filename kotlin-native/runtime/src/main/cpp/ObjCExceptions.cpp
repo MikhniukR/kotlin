@@ -4,38 +4,39 @@
 #include <inttypes.h>
 #include <mach-o/loader.h>
 #include <CoreFoundation/CFRunLoop.h>
-#include "cpp_support/Span.hpp"
-#include "Format.h"
 #include "Natives.h"
 #include "ObjCExceptions.h"
 #include "Types.h"
 
-using namespace kotlin;
-
 extern "C" OBJ_GETTER(Kotlin_Throwable_getStackTrace, KRef throwable);
 
-static void writeStackTraceToBuffer(KRef throwable, std_support::span<char> buffer) {
-    if (buffer.size() < 2) return;
+// TODO: Consider refactoring to `FormatToSpan`.
+static void writeStackTraceToBuffer(KRef throwable, char* buffer, unsigned long bufferSize) {
+  if (bufferSize < 2) return;
 
-    ObjHolder stackTraceHolder;
-    ArrayHeader* stackTrace = Kotlin_Throwable_getStackTrace(throwable, stackTraceHolder.slot())->array();
+  ObjHolder stackTraceHolder;
+  ArrayHeader* stackTrace = Kotlin_Throwable_getStackTrace(throwable, stackTraceHolder.slot())->array();
 
-    buffer = FormatToSpan(buffer, "(");
+  char* bufferPointer = buffer;
+  unsigned long remainingBytes = bufferSize;
 
-    auto traceBuffer = buffer.first(buffer.size() - 1);
+  *(bufferPointer++) = '(';
+  --remainingBytes;
 
-    for (uint32_t index = 0; index < stackTrace->count_; ++index) {
-        KNativePtr ptr = *PrimitiveArrayAddressOfElementAt<KNativePtr>(stackTrace, index);
-        traceBuffer = FormatToSpan(traceBuffer, "0x%" PRIxPTR " ", reinterpret_cast<uintptr_t>(ptr));
+  for (uint32_t index = 0; index < stackTrace->count_; ++index) {
+    KNativePtr ptr = *PrimitiveArrayAddressOfElementAt<KNativePtr>(stackTrace, index);
+    int bytes = snprintf(bufferPointer, remainingBytes, "0x%" PRIxPTR " ", reinterpret_cast<uintptr_t>(ptr));
 
-        if (traceBuffer.empty()) {
-            break;
-        }
+    if (bytes < 0 || static_cast<unsigned long>(bytes) >= remainingBytes) {
+      break;
     }
 
-    RuntimeAssert(buffer.size() - 1 >= traceBuffer.size(), "traceBuffer can only grow smaller");
-    buffer = buffer.subspan(buffer.size() - traceBuffer.size() - 1); // Replace last space.
-    FormatToSpan(buffer, ")");
+    bufferPointer += bytes;
+    remainingBytes -= bytes;
+  }
+
+  *(bufferPointer - 1) = ')'; // Replace last space.
+  *bufferPointer = '\0';
 }
 
 #if !defined(MACHSIZE)
@@ -119,7 +120,7 @@ void ReportBacktraceToIosCrashLog(KRef throwable) {
   // Instead assume that typically this buffer is accessed only during termination, and
   // rely on caller guaranteeing this code to be executed only before system termination handlers.
 
-  writeStackTraceToBuffer(throwable, std_support::span<char>(buffer, bufferSize));
+  writeStackTraceToBuffer(throwable, buffer, bufferSize);
 }
 
 #endif // KONAN_REPORT_BACKTRACE_TO_IOS_CRASH_LOG
