@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.diagnostics.rendering;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.kotlin.config.LanguageVersion;
 import org.jetbrains.kotlin.diagnostics.*;
 
 import java.util.HashMap;
@@ -143,7 +144,13 @@ public final class DiagnosticFactoryToRendererMap {
     }
 
     private static String deprecationMessage(DiagnosticFactoryForDeprecation<?, ?, ?> factory, String errorMessage) {
-        return errorMessage + ". This will become an error in Kotlin " + factory.getFeatureForError().getSinceVersion().getVersionString();
+        LanguageVersion sinceVersion = factory.getFeatureForError().getSinceVersion();
+        StringBuilder builder = new StringBuilder();
+        builder.append(errorMessage).append(". This will become an error");
+        if (sinceVersion != null) {
+            builder.append(" in Kotlin ").append(sinceVersion.getVersionString());
+        }
+        return builder.toString();
     }
 
     @Nullable
