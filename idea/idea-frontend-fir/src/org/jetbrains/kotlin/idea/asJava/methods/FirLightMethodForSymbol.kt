@@ -10,6 +10,7 @@ import com.intellij.psi.impl.light.LightParameterListBuilder
 import org.jetbrains.kotlin.asJava.builder.LightMemberOrigin
 import org.jetbrains.kotlin.asJava.classes.lazyPub
 import org.jetbrains.kotlin.asJava.elements.FirLightIdentifier
+import org.jetbrains.kotlin.idea.asJava.parameters.FirLightParameterList
 import org.jetbrains.kotlin.idea.frontend.api.isValid
 import org.jetbrains.kotlin.idea.frontend.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.psi.KtDeclaration
@@ -49,7 +50,7 @@ internal abstract class FirLightMethodForSymbol(
             }
         }
 
-        builder
+        FirLightParameterList(this, builder)
     }
 
     private val _identifier: PsiIdentifier by lazyPub {
