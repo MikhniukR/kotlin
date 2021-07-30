@@ -136,7 +136,7 @@ fun <A : Any, B : Any, C : Any, D : Any> DiagnosticReporter.reportOn(
     reportOn(source, factory.chooseFactory(context), a, b, c, d, context, positioningStrategy)
 }
 
-private fun <F : AbstractFirDiagnosticFactory> FirDiagnosticFactoryForDeprecation<F>.chooseFactory(context: CheckerContext): F {
+fun <F : AbstractFirDiagnosticFactory> FirDiagnosticFactoryForDeprecation<F>.chooseFactory(context: CheckerContext): F {
     return if (context.session.languageVersionSettings.supportsFeature(featureForError)) {
         errorFactory
     } else {

@@ -521,8 +521,16 @@ sealed class KtFirDiagnostic<PSI : PsiElement> : KtDiagnosticWithPsi<PSI> {
         override val diagnosticClass get() = AnnotationOnSuperclass::class
     }
 
+    abstract class AnnotationOnSuperclassWarning : KtFirDiagnostic<KtAnnotationEntry>() {
+        override val diagnosticClass get() = AnnotationOnSuperclassWarning::class
+    }
+
     abstract class RestrictedRetentionForExpressionAnnotation : KtFirDiagnostic<PsiElement>() {
         override val diagnosticClass get() = RestrictedRetentionForExpressionAnnotation::class
+    }
+
+    abstract class RestrictedRetentionForExpressionAnnotationWarning : KtFirDiagnostic<PsiElement>() {
+        override val diagnosticClass get() = RestrictedRetentionForExpressionAnnotationWarning::class
     }
 
     abstract class WrongAnnotationTarget : KtFirDiagnostic<KtAnnotationEntry>() {
@@ -1749,8 +1757,8 @@ sealed class KtFirDiagnostic<PSI : PsiElement> : KtDiagnosticWithPsi<PSI> {
         abstract val property: KtVariableSymbol
     }
 
-    abstract class ValReassignmentViaBackingFieldError : KtFirDiagnostic<KtExpression>() {
-        override val diagnosticClass get() = ValReassignmentViaBackingFieldError::class
+    abstract class ValReassignmentViaBackingFieldWarning : KtFirDiagnostic<KtExpression>() {
+        override val diagnosticClass get() = ValReassignmentViaBackingFieldWarning::class
         abstract val property: KtVariableSymbol
     }
 

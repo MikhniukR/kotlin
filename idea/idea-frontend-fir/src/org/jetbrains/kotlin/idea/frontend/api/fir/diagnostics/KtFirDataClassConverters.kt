@@ -721,8 +721,20 @@ internal val KT_DIAGNOSTIC_CONVERTER = KtDiagnosticConverterBuilder.buildConvert
             token,
         )
     }
+    add(FirErrors.ANNOTATION_ON_SUPERCLASS_WARNING) { firDiagnostic ->
+        AnnotationOnSuperclassWarningImpl(
+            firDiagnostic as FirPsiDiagnostic,
+            token,
+        )
+    }
     add(FirErrors.RESTRICTED_RETENTION_FOR_EXPRESSION_ANNOTATION) { firDiagnostic ->
         RestrictedRetentionForExpressionAnnotationImpl(
+            firDiagnostic as FirPsiDiagnostic,
+            token,
+        )
+    }
+    add(FirErrors.RESTRICTED_RETENTION_FOR_EXPRESSION_ANNOTATION_WARNING) { firDiagnostic ->
+        RestrictedRetentionForExpressionAnnotationWarningImpl(
             firDiagnostic as FirPsiDiagnostic,
             token,
         )
@@ -2497,8 +2509,8 @@ internal val KT_DIAGNOSTIC_CONVERTER = KtDiagnosticConverterBuilder.buildConvert
             token,
         )
     }
-    add(FirErrors.VAL_REASSIGNMENT_VIA_BACKING_FIELD_ERROR) { firDiagnostic ->
-        ValReassignmentViaBackingFieldErrorImpl(
+    add(FirErrors.VAL_REASSIGNMENT_VIA_BACKING_FIELD_WARNING) { firDiagnostic ->
+        ValReassignmentViaBackingFieldWarningImpl(
             firSymbolBuilder.variableLikeBuilder.buildVariableSymbol(firDiagnostic.a.fir),
             firDiagnostic as FirPsiDiagnostic,
             token,
