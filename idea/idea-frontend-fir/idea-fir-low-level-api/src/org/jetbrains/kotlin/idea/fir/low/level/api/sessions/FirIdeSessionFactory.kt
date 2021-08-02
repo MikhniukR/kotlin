@@ -214,7 +214,7 @@ internal object FirIdeSessionFactory {
                         )
                     )
                     add(javaSymbolProvider)
-                    addAll((builtinsAndCloneableSession.symbolProvider as FirCompositeSymbolProvider).providers)
+//                    addAll((builtinsAndCloneableSession.symbolProvider as FirCompositeSymbolProvider).providers)
                 }
             )
             register(FirProvider::class, FirIdeLibrariesSessionProvider(symbolProvider))
@@ -250,7 +250,7 @@ internal object FirIdeSessionFactory {
             val symbolProvider = FirCompositeSymbolProvider(
                 this,
                 listOf(
-                    FirIdeBuiltinSymbolProvider(this, moduleData, kotlinScopeProvider),
+//                    FirIdeBuiltinSymbolProvider(this, moduleData, kotlinScopeProvider),
                     FirCloneableSymbolProvider(this, moduleData, kotlinScopeProvider),
                 )
             )

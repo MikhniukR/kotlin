@@ -44,5 +44,7 @@
   </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/kotlin-ide" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/kotlin-ide/intellij" vcs="Git" />
   </component>
 </project>
