@@ -499,5 +499,6 @@ internal fun PhaseConfig.konanPhasesConfig(config: KonanConfig) {
         disableIf(destroySymbolTablePhase, isDescriptorsOnlyLibrary)
         disableIf(copyDefaultValuesToActualPhase, isDescriptorsOnlyLibrary)
         disableIf(specialBackendChecksPhase, isDescriptorsOnlyLibrary)
+        disableIf(checkSamSuperTypesPhase, isDescriptorsOnlyLibrary)
     }
 }
