@@ -280,9 +280,9 @@ class JsIntrinsicTransformers(backendContext: JsIrBackendContext) {
                 JsInvocation(jsExtensionReceiver, args)
             }
 
-            add(intrinsics.jsInvokeSuspendFunction, suspendInvokeTransform)
-            add(intrinsics.jsInvokeSuspendFunctionWithReceiver, suspendInvokeTransform)
-            add(intrinsics.jsInvokeSuspendFunctionWithReceiverAndParam, suspendInvokeTransform)
+            add(intrinsics.jsInvokeSuspendSuperType, suspendInvokeTransform)
+            add(intrinsics.jsInvokeSuspendSuperTypeWithReceiver, suspendInvokeTransform)
+            add(intrinsics.jsInvokeSuspendSuperTypeWithReceiverAndParam, suspendInvokeTransform)
         }
     }
 
