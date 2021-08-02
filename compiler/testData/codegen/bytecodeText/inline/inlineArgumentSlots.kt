@@ -49,4 +49,9 @@ class A {
 
 fun calcRequiredLayoutSize(count: Int, max: Int, toInt: Int) = 0
 
+// JVM_TEMPLATES
 // 3 ISTORE 10
+
+// JVM_IR_TEMPLATES
+// No fake variable for @InlineOnly 'count'
+// 2 ISTORE 10

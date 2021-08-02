@@ -13,12 +13,8 @@ import org.jetbrains.kotlin.codegen.inline.coroutines.markNoinlineLambdaIfSuspen
 import org.jetbrains.kotlin.codegen.inline.coroutines.surroundInvokesWithSuspendMarkersIfNeeded
 import org.jetbrains.kotlin.codegen.optimization.ApiVersionCallsPreprocessingMethodTransformer
 import org.jetbrains.kotlin.codegen.optimization.FixStackWithLabelNormalizationMethodTransformer
-import org.jetbrains.kotlin.codegen.optimization.common.ControlFlowGraph
-import org.jetbrains.kotlin.codegen.optimization.common.InsnSequence
-import org.jetbrains.kotlin.codegen.optimization.common.asSequence
-import org.jetbrains.kotlin.codegen.optimization.common.isMeaningful
+import org.jetbrains.kotlin.codegen.optimization.common.*
 import org.jetbrains.kotlin.codegen.optimization.fixStack.*
-import org.jetbrains.kotlin.codegen.optimization.fixStack.FastStackAnalyzer
 import org.jetbrains.kotlin.codegen.optimization.nullCheck.isCheckParameterIsNotNull
 import org.jetbrains.kotlin.codegen.pseudoInsns.PseudoInsn
 import org.jetbrains.kotlin.config.LanguageFeature
@@ -36,9 +32,11 @@ import org.jetbrains.org.objectweb.asm.commons.InstructionAdapter
 import org.jetbrains.org.objectweb.asm.commons.LocalVariablesSorter
 import org.jetbrains.org.objectweb.asm.commons.MethodRemapper
 import org.jetbrains.org.objectweb.asm.tree.*
+import org.jetbrains.org.objectweb.asm.tree.analysis.BasicValue
 import org.jetbrains.org.objectweb.asm.tree.analysis.Frame
 import org.jetbrains.org.objectweb.asm.util.Printer
 import java.util.*
+import kotlin.collections.HashSet
 import kotlin.math.max
 
 class MethodInliner(
@@ -747,6 +745,10 @@ class MethodInliner(
             ApiVersionCallsPreprocessingMethodTransformer(targetApiVersion).transform("fake", node)
         }
 
+        if (inliningContext.isRoot && inliningContext.callSiteInfo.isCalleeInlineOnly) {
+            removeFakeVariableInitializationIfPresent(node)
+        }
+
         val frames = FastStackAnalyzer("<fake>", node, FixStackInterpreter()).analyze()
 
         val localReturnsNormalizer = LocalReturnsNormalizer()
@@ -767,6 +769,92 @@ class MethodInliner(
         }
 
         localReturnsNormalizer.transform(node)
+    }
+
+    private fun removeFakeVariableInitializationIfPresent(node: MethodNode) {
+        val suspiciousIStoreInstructions = HashSet<VarInsnNode>()
+
+        for (p0 in node.instructions.toArray()) {
+            // Looking for a sequence of instructions:
+            //  p0:     ICONST_0
+            //  p1:     ISTORE x
+            //  p2:     <label>
+            // such that '<label>' doesn't start a named local variable liveness region for variable 'x'.
+            // Such ISTORE instructions are "suspicious" in terms that they can be fake variable markers for @InlineOnly functions
+            // left from older compiler and stdlib versions.
+
+            if (p0.opcode != Opcodes.ICONST_0) continue
+
+            val p1 = p0.next ?: break
+            if (p1.opcode != Opcodes.ISTORE) continue
+            val varIndex = (p1 as VarInsnNode).`var`
+
+            val p2 = p1.next ?: break
+            if (p2.type != AbstractInsnNode.LABEL) continue
+
+            if (node.localVariables.any { it.index == varIndex && it.start == p2 }) continue
+
+            suspiciousIStoreInstructions.add(p1)
+        }
+
+        if (suspiciousIStoreInstructions.isEmpty()) return
+
+        // We have a set of suspicious ISTORE instructions.
+        // Check that none of those instructions in "observed" - that is, ILOADed, IINCed,
+        // or initializes a variable visible in debugger.
+
+        class StoredValue(val iStoreInsn: VarInsnNode, val storedValue: BasicValue) : BasicValue(storedValue.type)
+
+        val interpreter = object : OptimizationBasicInterpreter() {
+            override fun copyOperation(insn: AbstractInsnNode, value: BasicValue): BasicValue =
+                when {
+                    insn in suspiciousIStoreInstructions -> {
+                        StoredValue(insn as VarInsnNode, value)
+                    }
+                    insn.opcode == Opcodes.ILOAD && value is StoredValue -> {
+                        // ILOADed a "suspicious" value - corresponding ISTORE is no longer "suspicious"
+                        suspiciousIStoreInstructions.remove(value.iStoreInsn)
+                        value.storedValue
+                    }
+                    else -> {
+                        super.copyOperation(insn, value)
+                    }
+                }
+
+            override fun unaryOperation(insn: AbstractInsnNode, value: BasicValue): BasicValue? {
+                if (insn.opcode == Opcodes.IINC && value is StoredValue) {
+                    // IINCed a "suspicious" value - corresponding ISTORE is no longer "suspicious"
+                    suspiciousIStoreInstructions.remove(value.iStoreInsn)
+                    return value.storedValue
+                }
+                return super.unaryOperation(insn, value)
+            }
+        }
+
+        val frames = FastMethodAnalyzer("<fake>", node, interpreter).analyze()
+
+        if (suspiciousIStoreInstructions.isEmpty()) return
+
+        val iStoreInstructionsToRemove =
+            suspiciousIStoreInstructions.filter { iStoreInsn ->
+                val varIndex = iStoreInsn.`var`
+                val lvtStartLabels = node.localVariables.mapNotNull { lv -> lv.start.takeIf { lv.index == varIndex } }
+                lvtStartLabels.none { label ->
+                    // Check that an observable variable is not initialized with "suspicious" ISTORE instruction
+                    val labelFrame = frames[node.instructions.indexOf(label)]
+                    val varValue = labelFrame?.getLocal(varIndex)
+                    varValue is StoredValue && varValue.iStoreInsn == iStoreInsn
+                }
+            }
+
+        if (iStoreInstructionsToRemove.isEmpty()) return
+
+        // Remove all non-observable suspicious ISTOREs with preceding ICONST_0s.
+        for (iStore in iStoreInstructionsToRemove) {
+            val iConst0 = iStore.previous
+            node.instructions.remove(iConst0)
+            node.instructions.remove(iStore)
+        }
     }
 
     private fun isAnonymousClassThatMustBeRegenerated(type: Type?): Boolean {

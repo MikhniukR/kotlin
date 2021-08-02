@@ -26,7 +26,8 @@ class InlineCallSiteInfo(
     val method: Method,
     val isInlineOrInsideInline: Boolean,
     val file: PsiFile?,
-    val lineNumber: Int
+    val lineNumber: Int,
+    val isCalleeInlineOnly: Boolean
 )
 
 interface SourceCompilerForInline {
