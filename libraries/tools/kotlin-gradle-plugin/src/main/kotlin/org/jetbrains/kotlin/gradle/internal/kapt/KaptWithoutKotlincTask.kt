@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.gradle.internal
 
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
@@ -23,7 +24,6 @@ import org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptIncrementalChan
 import org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.CompilerPluginOptions
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.kotlin.gradle.tasks.findKotlinStdlibClasspath
 import org.jetbrains.kotlin.gradle.utils.isGradleVersionAtLeast
 import org.jetbrains.kotlin.utils.PathUtil
 import org.slf4j.LoggerFactory
@@ -50,7 +50,6 @@ abstract class KaptWithoutKotlincTask @Inject constructor(
     }
 
     @get:Classpath
-    @Suppress("unused")
     abstract val kaptJars: ConfigurableFileCollection
 
     @get:Input
@@ -73,9 +72,6 @@ abstract class KaptWithoutKotlincTask @Inject constructor(
 
     @get:Input
     internal abstract val addJdkClassesToClasspath: Property<Boolean>
-
-    @get:Classpath
-    internal val kotlinStdlibClasspath = findKotlinStdlibClasspath(project)
 
     @get:Internal
     internal val projectDir = project.projectDir
@@ -153,7 +149,7 @@ abstract class KaptWithoutKotlincTask @Inject constructor(
             return
         }
 
-        val kaptClasspath = kaptJars.toList() + kotlinStdlibClasspath
+        val kaptClasspath = kaptJars
         val isolationMode = getWorkerIsolationMode()
         logger.info("Using workers $isolationMode isolation mode to run kapt")
         val toolsJarURLSpec = defaultKotlinJavaToolchain.get()
@@ -190,7 +186,7 @@ abstract class KaptWithoutKotlincTask @Inject constructor(
         isolationMode: IsolationMode,
         optionsForWorker: KaptOptionsForWorker,
         toolsJarURLSpec: String,
-        kaptClasspath: List<File>
+        kaptClasspath: FileCollection
     ) {
         val workQueue = when (isolationMode) {
             IsolationMode.PROCESS -> workerExecutor.processIsolation {

@@ -8,7 +8,6 @@ package org.jetbrains.kotlin.gradle.tasks
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.*
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.attributes.Attribute
@@ -78,15 +77,12 @@ abstract class AbstractKotlinCompileTool<T : CommonToolArguments>
     @PathSensitive(PathSensitivity.RELATIVE)
     override fun getSource() = super.getSource()
 
-    @get:Input
-    internal var useFallbackCompilerSearch: Boolean = false
-
     @get:Internal
     override val metrics: BuildMetricsReporter =
         BuildMetricsReporterImpl()
 
     /**
-     * By default should be set by plugin from [COMPILER_CLASSPATH_CONFIGURATION_NAME] configuration.
+     * By default, should be set by plugin from [COMPILER_CLASSPATH_CONFIGURATION_NAME] configuration.
      *
      * Empty classpath will fail the build.
      */
@@ -94,20 +90,10 @@ abstract class AbstractKotlinCompileTool<T : CommonToolArguments>
     internal val defaultCompilerClasspath: ConfigurableFileCollection =
         project.objects.fileCollection()
 
-    @get:Classpath
-    internal val computedCompilerClasspath: FileCollection = project.objects.fileCollection().from({
-        when {
-            useFallbackCompilerSearch -> findKotlinCompilerClasspath(project)
-            else -> defaultCompilerClasspath
-        }
-    })
-
-    protected abstract fun findKotlinCompilerClasspath(project: Project): List<File>
-
     init {
-        doFirst {
+        this.doFirst {
             require(!defaultCompilerClasspath.isEmpty) {
-                "Default Kotlin compiler classpath is empty! Task: ${path} (${this::class.qualifiedName})"
+                "Default Kotlin compiler classpath is empty! Task: $path (${this::class.qualifiedName})"
             }
         }
     }
@@ -594,9 +580,6 @@ abstract class KotlinCompile @Inject constructor(
         incremental = true
     }
 
-    override fun findKotlinCompilerClasspath(project: Project): List<File> =
-        findKotlinJvmCompilerClasspath(project)
-
     override fun createCompilerArgs(): K2JVMCompilerArguments =
         K2JVMCompilerArguments()
 
@@ -646,7 +629,7 @@ abstract class KotlinCompile @Inject constructor(
         } else null
 
         val environment = GradleCompilerEnvironment(
-            computedCompilerClasspath, messageCollector, outputItemCollector,
+            defaultCompilerClasspath, messageCollector, outputItemCollector,
             outputFiles = allOutputFiles(),
             reportingSettings = reportingSettings,
             incrementalCompilationEnvironment = icEnv,
@@ -913,9 +896,6 @@ abstract class Kotlin2JsCompile @Inject constructor(
     @get:Optional
     abstract val optionalOutputFile: RegularFileProperty
 
-    override fun findKotlinCompilerClasspath(project: Project): List<File> =
-        findKotlinJsCompilerClasspath(project)
-
     override fun createCompilerArgs(): K2JSCompilerArguments =
         K2JSCompilerArguments()
 
@@ -1058,7 +1038,7 @@ abstract class Kotlin2JsCompile @Inject constructor(
         } else null
 
         val environment = GradleCompilerEnvironment(
-            computedCompilerClasspath, messageCollector, outputItemCollector,
+            defaultCompilerClasspath, messageCollector, outputItemCollector,
             outputFiles = allOutputFiles(),
             reportingSettings = reportingSettings,
             incrementalCompilationEnvironment = icEnv
