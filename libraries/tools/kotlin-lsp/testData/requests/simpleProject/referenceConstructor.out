@@ -1,0 +1,3 @@
+Content-Length: 234
+
+{"jsonrpc":"2.0","id":13,"result":[{"uri":"file:///Users/Roman.Mikhniuk/work/kotlin/libraries/tools/kotlin-lsp/testData/projects/simpleProject/src/test.kt","range":{"start":{"line":2,"character":14},"end":{"line":2,"character":17}}}]}

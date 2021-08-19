@@ -1,0 +1,9 @@
+Content-Length: 97
+
+{
+    "jsonrpc": "2.0",
+    "id" : 17,
+    "method": "workspace/symbol",
+    "params": {
+    }
+}

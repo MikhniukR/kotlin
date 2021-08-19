@@ -5,9 +5,8 @@
 
 package org.jetbrains.kotlin.lsp.utils
 
-import org.jetbrains.kotlin.lsp.domain.DocumentSymbol
-import org.jetbrains.kotlin.lsp.domain.SymbolKind
-import org.jetbrains.kotlin.lsp.domain.toLspRange
+import org.eclipse.lsp4j.DocumentSymbol
+import org.eclipse.lsp4j.SymbolKind
 import org.jetbrains.kotlin.psi.*
 
 fun doDocumentSymbol(element: KtElement): List<DocumentSymbol> {
@@ -34,12 +33,10 @@ fun documentSymbol(declaration: KtNamedDeclaration, children: MutableList<Docume
 
     return DocumentSymbol(
         declaration.name ?: "<anonymous>",
-        null,
         symbolKind(declaration),
-        null,
-        null,
         range,
         declaration.nameIdentifier?.textRange?.toLspRange(declaration) ?: range,
+        null,
         children
     )
 }
@@ -55,3 +52,13 @@ fun symbolKind(namedDeclaration: KtNamedDeclaration): SymbolKind =
 //        is KtVariableDeclaration -> SymbolKind.Variable
         else -> throw IllegalArgumentException("Unexpected symbol $namedDeclaration")
     }
+
+fun DocumentSymbol.getAsList(): MutableList<DocumentSymbol> {
+    if (children.isEmpty())
+        return mutableListOf(this)
+
+    val result = mutableListOf(this)
+    children.forEach { result.addAll(it.getAsList()) }
+
+    return result
+}

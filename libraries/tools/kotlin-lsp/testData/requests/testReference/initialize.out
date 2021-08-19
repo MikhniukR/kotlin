@@ -1,0 +1,3 @@
+Content-Length: 582
+
+{"jsonrpc":"2.0","id":0,"result":{"capabilities":{"textDocumentSync":2,"hoverProvider":true,"completionProvider":{"resolveProvider":false,"triggerCharacters":["."]},"signatureHelpProvider":{"triggerCharacters":["(",","]},"definitionProvider":true,"referencesProvider":true,"documentSymbolProvider":true,"workspaceSymbolProvider":true,"codeActionProvider":false,"documentFormattingProvider":false,"documentRangeFormattingProvider":false,"workspace":{"workspaceFolders":{"supported":false,"changeNotifications":false}}},"serverInfo":{"name":"Kotlin Language Server","version":"0.1"}}}

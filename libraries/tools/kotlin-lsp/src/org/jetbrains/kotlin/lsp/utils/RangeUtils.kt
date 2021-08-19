@@ -5,10 +5,10 @@
 
 package org.jetbrains.kotlin.lsp.utils
 
-import com.intellij.psi.PsiElementVisitor
+import com.intellij.openapi.util.TextRange
+import org.eclipse.lsp4j.Range
 import org.jetbrains.kotlin.psi.KtElement
 
-fun KtElement.acceptAll(visitor: PsiElementVisitor) {
-    this.accept(visitor)
-    children.forEach { ch -> if (ch is KtElement) ch.acceptAll(visitor) }
-}
+fun TextRange.toLspRange(declaration: KtElement): Range =
+    Range(startOffset.toPosition(declaration.containingKtFile), endOffset.toPosition(declaration.containingKtFile))
+

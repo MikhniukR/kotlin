@@ -11,14 +11,18 @@ import org.jetbrains.kotlin.idea.fir.frontend.api.test.framework.AbstractHLApiSi
 import org.jetbrains.kotlin.idea.fir.low.level.api.test.base.expressionMarkerProvider
 import org.jetbrains.kotlin.idea.frontend.api.KtAnalysisSession
 import org.jetbrains.kotlin.idea.frontend.api.analyse
+import org.jetbrains.kotlin.idea.frontend.api.analyseWithReadAction
 import org.jetbrains.kotlin.idea.frontend.api.components.KtDeclarationRendererOptions
 import org.jetbrains.kotlin.idea.frontend.api.components.RendererModifier
 import org.jetbrains.kotlin.idea.frontend.api.symbols.*
 import org.jetbrains.kotlin.idea.frontend.api.symbols.markers.KtNamedSymbol
 import org.jetbrains.kotlin.idea.frontend.api.symbols.markers.KtSymbolWithKind
 import org.jetbrains.kotlin.idea.references.KtReference
+import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.directives.JvmEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.model.SimpleDirectivesContainer
@@ -37,8 +41,29 @@ abstract class AbstractReferenceResolveTest : AbstractHLApiSingleModuleTest() {
         }
     }
 
+    fun tryResolve(element: KtElement) {
+        analyseWithReadAction(element) {
+            try {
+                val reference = element.mainReference
+                val reference2 = element.findReferenceAt(58)
+                if (reference != null || reference2 != null)
+                    print("KEK")
+                reference?.resolveToSymbol()
+            } catch (e: Exception) {
+
+            }
+        }
+    }
+
+    fun foo(ktElement: KtElement) {
+//    println(ktElement.text)
+        tryResolve(ktElement)
+        ktElement.children.filterIsInstance<KtElement>().forEach { foo(it) }
+    }
+
     override fun doTestByFileStructure(ktFiles: List<KtFile>, module: TestModule, testServices: TestServices) {
         val mainKtFile = ktFiles.singleOrNull() ?: ktFiles.first { it.name == "main.kt" }
+        foo(mainKtFile)
         val caretPosition = testServices.expressionMarkerProvider.getCaretPosition(mainKtFile)
         val ktReferences = findReferencesAtCaret(mainKtFile, caretPosition)
         if (ktReferences.isEmpty()) {

@@ -1,0 +1,16 @@
+Content-Length: 351
+
+{
+    "jsonrpc": "2.0",
+    "id" : 8,
+    "method": "textDocument/hover",
+    "params": {
+        "textDocument": {
+            "uri": "file:///Users/Roman.Mikhniuk/work/kotlin/libraries/tools/kotlin-lsp/testData/projects/simpleProject/src/test.kt"
+        },
+        "position": {
+            "line": 2,
+            "character": 15
+        }
+    }
+}

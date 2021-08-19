@@ -1,0 +1,3 @@
+Content-Length: 130
+
+{"jsonrpc":"2.0","id":9,"result":{"contents":{"kind":"markdown","value":"```kotlin\npublic fun testHover(s: String): Unit\n```"}}}
