@@ -28,4 +28,4 @@
 
 Для большинства функциональных запросов приходит файл и позиция в нем. [Specification](https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#textDocumentPositionParams)
 В качестве идентификатора файла приходит его URI [Specification](https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#uri) вида `"uri":"file:///Users/Roman.Mikhniuk/work/kotlin/libraries/tools/kotlin-lsp/testData/projects/simpleProject/src/test.kt"`.
-Для идентификации позиции приходит line + character, которые потом преобразуются в _offset_ и обратно.
+Для идентификации позиции приходит line + character, которые потом преобразуются в _offset_ и обратно. [link](https://github.com/MikhniukR/kotlin/blob/lsp/libraries/tools/kotlin-lsp/src/org/jetbrains/kotlin/lsp/utils/PositionUtils.kt#L12)
