@@ -1,3 +1,1 @@
-Content-Length: 176
-
-{"jsonrpc":"2.0","id":11,"result":{"contents":{"kind":"markdown","value":"```kotlin\npublic \u003cT: Comparable\u003cT\u003e, S\u003e fun testGeneric(t: T, s: S): Unit\n```"}}}
+{"jsonrpc":"2.0","id":11,"result":{"contents":{"kind":"markdown","value":"```kotlin\npublic fun \u003cT: Comparable\u003cT\u003e, S\u003e testGeneric(t: T, s: S): Unit\n```"}}}

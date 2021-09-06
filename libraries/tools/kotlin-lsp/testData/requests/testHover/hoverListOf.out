@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":1,"result":{"contents":{"kind":"markdown","value":"```kotlin\npublic fun \u003cT\u003e listOf(elements: Array\u003cout T\u003e): List\u003cT\u003e\n```"}}}

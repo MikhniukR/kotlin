@@ -1,3 +1,1 @@
-Content-Length: 432
-
-{"jsonrpc":"2.0","id":14,"result":[{"uri":"file:///Users/Roman.Mikhniuk/work/kotlin/libraries/tools/kotlin-lsp/testData/projects/simpleProject/src/test.kt","range":{"start":{"line":3,"character":14},"end":{"line":3,"character":27}}},{"uri":"file:///Users/Roman.Mikhniuk/work/kotlin/libraries/tools/kotlin-lsp/testData/projects/simpleProject/src/test.kt","range":{"start":{"line":4,"character":33},"end":{"line":4,"character":46}}}]}
+{"jsonrpc":"2.0","id":14,"result":[{"uri":"libraries/tools/kotlin-lsp/testData/projects/simpleProject/src/test.kt","range":{"start":{"line":3,"character":14},"end":{"line":3,"character":27}}},{"uri":"libraries/tools/kotlin-lsp/testData/projects/simpleProject/src/test.kt","range":{"start":{"line":4,"character":33},"end":{"line":4,"character":46}}}]}

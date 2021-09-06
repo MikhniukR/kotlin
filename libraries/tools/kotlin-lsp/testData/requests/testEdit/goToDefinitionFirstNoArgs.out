@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":15,"result":[{"uri":"libraries/tools/kotlin-lsp/testData/projects/testEdit/Second.kt","range":{"start":{"line":8,"character":0},"end":{"line":10,"character":1}}}]}

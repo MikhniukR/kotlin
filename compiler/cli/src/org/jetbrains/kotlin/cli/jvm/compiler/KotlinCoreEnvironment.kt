@@ -40,9 +40,7 @@ import com.intellij.openapi.vfs.*
 import com.intellij.openapi.vfs.impl.ZipHandler
 import com.intellij.psi.PsiElementFinder
 import com.intellij.psi.PsiManager
-import com.intellij.psi.impl.JavaClassSupersImpl
-import com.intellij.psi.impl.PsiElementFinderImpl
-import com.intellij.psi.impl.PsiTreeChangePreprocessor
+import com.intellij.psi.impl.*
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.JavaClassSupers
@@ -480,6 +478,7 @@ class KotlinCoreEnvironment private constructor(
         ): KotlinCoreEnvironment {
             setupIdeaStandaloneExecution()
             val appEnv = getOrCreateApplicationEnvironmentForProduction(parentDisposable, configuration)
+            appEnv.application.registerService(DocumentCommitProcessor::class.java, DocumentCommitThread::class.java)
             val projectEnv = ProjectEnvironment(parentDisposable, appEnv, configuration)
             val environment = KotlinCoreEnvironment(projectEnv, configuration, configFiles)
 

@@ -6,14 +6,20 @@
 package org.jetbrains.kotlin.lsp.implementations
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.ProjectScope
 import org.jetbrains.kotlin.analyzer.LibraryModuleInfo
 import org.jetbrains.kotlin.analyzer.ModuleInfo
 import org.jetbrains.kotlin.analyzer.ModuleSourceInfoBase
 import org.jetbrains.kotlin.analyzer.common.CommonPlatformAnalyzerServices
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
+import org.jetbrains.kotlin.cli.jvm.compiler.JvmPackagePartProvider
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
+import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
 import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.descriptors.ModuleCapability
 import org.jetbrains.kotlin.fir.DependencyListForCliModule
 import org.jetbrains.kotlin.fir.FirModuleDataImpl
@@ -37,11 +43,12 @@ import java.nio.file.Paths
 
 class FirModuleResolveStateConfiguratorImpl(
     private val project: Project,
-    private val languageVersionSettings: LanguageVersionSettings,
-    private val ktFiles: List<KtFile>
+    private val ktFiles: List<KtFile>,
+    private val environment: KotlinCoreEnvironment
 ) : FirModuleResolveStateConfigurator() {
-    override fun createPackagePartsProvider(moduleInfo: ModuleSourceInfoBase, scope: GlobalSearchScope): PackagePartProvider =
-        PackagePartProvider.Empty
+    override fun createPackagePartsProvider(moduleInfo: ModuleSourceInfoBase, scope: GlobalSearchScope): PackagePartProvider {
+        return environment.createPackagePartProvider(scope)
+    }
 
     override fun createModuleDataProvider(moduleInfo: ModuleSourceInfoBase): ModuleDataProvider {
         return DependencyListForCliModule.build(
@@ -49,29 +56,19 @@ class FirModuleResolveStateConfiguratorImpl(
             moduleInfo.platform,
             moduleInfo.analyzerServices
         ) {
-            dependencies(moduleInfo.dependenciesWithoutSelf().extractLibraryPaths(project))
-            friendDependencies(moduleInfo.modulesWhoseInternalsAreVisible().extractLibraryPaths(project))
-            dependsOnDependencies(moduleInfo.expectedBy.extractLibraryPaths(project))
+            dependencies(moduleInfo.dependenciesWithoutSelf().extractLibraryPaths())
+            friendDependencies(moduleInfo.modulesWhoseInternalsAreVisible().extractLibraryPaths())
+            dependsOnDependencies(moduleInfo.expectedBy.extractLibraryPaths())
 
             val moduleData = FirModuleInfoBasedModuleData(moduleInfo)
             sourceDependencies(moduleData.dependencies)
             sourceFriendsDependencies(moduleData.friendDependencies)
             sourceDependsOnDependencies(moduleData.dependsOnDependencies)
         }.moduleDataProvider
-//        return SingleModuleDataProvider(
-//            FirModuleDataImpl(
-//                moduleInfo.name,
-//                emptyList(),
-//                emptyList(),
-//                emptyList(),
-//                moduleInfo.platform,
-//                moduleInfo.analyzerServices
-//            )
-//        )
-//        return SingleModuleDataProvider(FirModuleInfoBasedModuleData(moduleInfo))
     }
 
-    override fun getLanguageVersionSettings(moduleInfo: ModuleSourceInfoBase): LanguageVersionSettings = languageVersionSettings
+    override fun getLanguageVersionSettings(moduleInfo: ModuleSourceInfoBase): LanguageVersionSettings =
+        environment.configuration.languageVersionSettings
 
     override fun getModuleSourceScope(moduleInfo: ModuleSourceInfoBase): GlobalSearchScope =
         TopDownAnalyzerFacadeForJVM.newModuleSearchScope(project, ktFiles)
@@ -85,14 +82,17 @@ class FirModuleResolveStateConfiguratorImpl(
 
     override fun getModuleInfoFor(element: KtElement): ModuleInfo = ModuleInfoImpl()
 
-    private fun Sequence<ModuleInfo>.extractLibraryPaths(project: Project): List<Path> {
+    override fun configureSourceSession(session: FirSession) {
+    }
+
+    private fun Sequence<ModuleInfo>.extractLibraryPaths(): List<Path> {
         return fold(mutableListOf()) { acc, moduleInfo ->
             moduleInfo.extractLibraryPaths(acc)
             acc
         }
     }
 
-    private fun Iterable<ModuleInfo>.extractLibraryPaths(project: Project): List<Path> {
+    private fun Iterable<ModuleInfo>.extractLibraryPaths(): List<Path> {
         return fold(mutableListOf()) { acc, moduleInfo ->
             moduleInfo.extractLibraryPaths(acc)
             acc
@@ -101,22 +101,12 @@ class FirModuleResolveStateConfiguratorImpl(
 
     private fun ModuleInfo.extractLibraryPaths(destination: MutableList<Path>) {
         when (this) {
-//            is SdkInfoBase -> {
-//                val sdk = (this as SdkInfo).sdk
-//                sdk.rootProvider.getFiles(OrderRootType.CLASSES).mapNotNullTo(destination) {
-//                    Paths.get(it.fileSystem.extractPresentableUrl(it.path)).normalize()
-//                }
-//            }
             is LibraryModuleInfo -> {
                 getLibraryRoots().mapTo(destination) {
                     Paths.get(it).normalize()
                 }
             }
         }
-    }
-
-
-    override fun configureSourceSession(session: FirSession) {
     }
 }
 
@@ -127,8 +117,6 @@ internal class ModuleInfoImpl(
     override val platform: TargetPlatform = TargetPlatform(
         setOf(
             unspecifiedJvmPlatform.single()
-//            defaultJsPlatform.single(),
-//            unspecifiedNativePlatform.single()
         )
     )
 ) : ModuleSourceInfoBase {
@@ -155,7 +143,6 @@ internal class StdLibraryModuleInfo(
             "/Users/Roman.Mikhniuk/work/kotlin/libraries/stdlib/jvm/build/libs/kotlin-stdlib-1.6.255-SNAPSHOT.jar",
             "/Users/Roman.Mikhniuk/Library/Application Support/JetBrains/Toolbox/apps/IDEA-U/ch-0/212.4746.92/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/lib/kotlin-stdlib.jar",
             "/Users/Roman.Mikhniuk/work/kotlin/core/builtins/build/libs/builtins-1.6.255-SNAPSHOT.jar",
-            "/Users/Roman.Mikhniuk/work/kotlin/libraries/scripting/jvm-host-embeddable/build/libs/kotlin-scripting-jvm-host-1.6.255-SNAPSHOT.jar",
             "/Users/Roman.Mikhniuk/.gradle/wrapper/dists/gradle-6.9-bin/2ecsmyp3bolyybemj56vfn4mt/gradle-6.9/lib/kotlin-stdlib-1.4.20.jar",
             "/Users/Roman.Mikhniuk/.gradle/wrapper/dists/gradle-6.9-bin/2ecsmyp3bolyybemj56vfn4mt/gradle-6.9/lib/kotlin-stdlib-common-1.4.20.jar",
             "/Users/Roman.Mikhniuk/.gradle/wrapper/dists/gradle-6.9-bin/2ecsmyp3bolyybemj56vfn4mt/gradle-6.9/lib/kotlin-stdlib-jdk7-1.4.20.jar",
@@ -178,7 +165,6 @@ internal class JdkModuleInfo(
 
     override fun getLibraryRoots(): Collection<String> =
         listOf(
-            "/Users/Roman.Mikhniuk/.gradle/jdks/jdk8u292-b10/Contents/Home",
             "/Users/Roman.Mikhniuk/.gradle/jdks/jdk8u292-b10/Contents/Home/jre/lib/charsets.jar",
             "/Users/Roman.Mikhniuk/.gradle/jdks/jdk8u292-b10/Contents/Home/jre/lib/ext/cldrdata.jar",
             "/Users/Roman.Mikhniuk/.gradle/jdks/jdk8u292-b10/Contents/Home/jre/lib/ext/dnsns.jar",
@@ -205,9 +191,3 @@ internal class JdkModuleInfo(
     override fun dependencies(): List<ModuleInfo> = listOf(this)
 
 }
-
-//LibraryModuleInfo, прописать все пути к jar в getLibraryRoots
-/*
-std lib состоит из нескольких jar-ников, нужно будет все закинуть
-возможно придется добавить moduleInfo на JDK и зависить на неё из обоих модулей
- */

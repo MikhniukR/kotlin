@@ -1,0 +1,17 @@
+{
+    "jsonrpc": "2.0",
+    "id" : 0,
+    "method": "initialize",
+    "params": {
+        "clientInfo": {
+            "name": "testName",
+            "version": "0.0.1"
+        },
+        "workspaceFolders": [
+            {
+                "uri": "libraries/tools/kotlin-lsp/testData/projects/testHover",
+                "name": "test"
+            }
+        ]
+    }
+}

@@ -9,7 +9,7 @@ import com.intellij.mock.MockProject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.idea.fir.low.level.api.FirIdeResolveStateService;
 
-public class RegisterComponentService {
+public class RegisterComponentServiceHack {
 
     public static void registerFirIdeResolveStateService(@NotNull MockProject project) {
         project.getPicoContainer().registerComponentInstance(FirIdeResolveStateService.class.getName(), new FirIdeResolveStateService(project));

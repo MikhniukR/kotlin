@@ -65,7 +65,7 @@ class DeclarationProviderImpl(
 
     override fun findFilesForFacade(facadeFqName: FqName): Collection<KtFile> {
         if (facadeFqName.shortNameOrSpecial().isSpecial) return emptyList()
-        return getFacadeFilesInPackage(facadeFqName.parent()) //TODO Not work correctly for classes with JvmPackageName
+        return getFacadeFilesInPackage(facadeFqName.parent())
             .filter { it.javaFileFacadeFqName == facadeFqName }
     }
 

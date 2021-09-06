@@ -1,0 +1,14 @@
+{
+    "jsonrpc": "2.0",
+    "id" : 6,
+    "method": "textDocument/hover",
+    "params": {
+        "textDocument": {
+            "uri": "libraries/tools/kotlin-lsp/testData/projects/testEdit/Main.kt"
+        },
+        "position": {
+            "line": 9,
+            "character": 5
+        }
+    }
+}

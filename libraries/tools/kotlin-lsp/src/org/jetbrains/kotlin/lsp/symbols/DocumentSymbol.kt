@@ -3,10 +3,11 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.lsp.utils
+package org.jetbrains.kotlin.lsp.symbols
 
 import org.eclipse.lsp4j.DocumentSymbol
 import org.eclipse.lsp4j.SymbolKind
+import org.jetbrains.kotlin.lsp.utils.toLspRange
 import org.jetbrains.kotlin.psi.*
 
 fun doDocumentSymbol(element: KtElement): List<DocumentSymbol> {
@@ -48,8 +49,6 @@ fun symbolKind(namedDeclaration: KtNamedDeclaration): SymbolKind =
         is KtConstructor<*> -> SymbolKind.Constructor
         is KtNamedFunction -> SymbolKind.Function
         is KtProperty -> SymbolKind.Property
-        //todo diff Property vs Variable
-//        is KtVariableDeclaration -> SymbolKind.Variable
         else -> throw IllegalArgumentException("Unexpected symbol $namedDeclaration")
     }
 

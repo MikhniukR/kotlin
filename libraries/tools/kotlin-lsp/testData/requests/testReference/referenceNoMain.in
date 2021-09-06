@@ -1,0 +1,14 @@
+{
+    "jsonrpc": "2.0",
+    "id" : 4,
+    "method": "textDocument/references",
+    "params": {
+        "textDocument": {
+            "uri": "libraries/tools/kotlin-lsp/testData/projects/testReference/NoMain.kt"
+        },
+        "position": {
+            "line": 4,
+            "character": 4
+        }
+    }
+}

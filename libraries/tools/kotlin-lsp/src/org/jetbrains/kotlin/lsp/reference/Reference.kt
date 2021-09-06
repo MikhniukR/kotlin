@@ -3,13 +3,15 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.lsp.utils
+package org.jetbrains.kotlin.lsp.reference
 
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.Position
 import org.jetbrains.kotlin.idea.frontend.api.analyseWithReadAction
 import org.jetbrains.kotlin.idea.references.KtReference
 import org.jetbrains.kotlin.lsp.SourceFilesManager
+import org.jetbrains.kotlin.lsp.utils.toLspRange
+import org.jetbrains.kotlin.lsp.utils.toOffset
 import org.jetbrains.kotlin.psi.KtConstructor
 import org.jetbrains.kotlin.psi.KtFile
 

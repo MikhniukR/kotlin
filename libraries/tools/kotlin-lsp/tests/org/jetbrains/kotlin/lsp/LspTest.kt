@@ -5,7 +5,6 @@
 
 package org.jetbrains.kotlin.lsp
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class LspTest {
@@ -22,6 +21,18 @@ class LspTest {
         fun initializeTestReference() {
             sendRequest("libraries/tools/kotlin-lsp/testData/requests/testReference/initialize.in")
             checkResult("libraries/tools/kotlin-lsp/testData/requests/testReference/initialize.out")
+        }
+
+        @Test
+        fun initializesTestHover() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testHover/initialize.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testHover/initialize.out")
+        }
+
+        @Test
+        fun initializeTestEdit() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.out")
         }
     }
 
@@ -48,13 +59,6 @@ class LspTest {
             checkResult("libraries/tools/kotlin-lsp/testData/requests/simpleProject/goToDefinitionOtherFile.out")
         }
 
-        @Disabled
-        @Test
-        fun goToDefinitionStdlibPrint() {
-            sendRequest("libraries/tools/kotlin-lsp/testData/requests/simpleProject/goToDefinitionStdlibPrint.in")
-            checkResult("libraries/tools/kotlin-lsp/testData/requests/simpleProject/goToDefinitionStdlibPrint.out")
-        }
-
         @Test
         fun hoverConstructor() {
             sendRequest("libraries/tools/kotlin-lsp/testData/requests/simpleProject/hoverConstructor.in")
@@ -77,6 +81,12 @@ class LspTest {
         fun hoverGeneric() {
             sendRequest("libraries/tools/kotlin-lsp/testData/requests/simpleProject/hoverGeneric.in")
             checkResult("libraries/tools/kotlin-lsp/testData/requests/simpleProject/hoverGeneric.out")
+        }
+
+        @Test
+        fun hoverStdlibPrint() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/simpleProject/hoverStdlibPrint.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/simpleProject/hoverStdlibPrint.out")
         }
 
         @Test
@@ -137,6 +147,119 @@ class LspTest {
         fun referenceConstructor() {
             sendRequest("libraries/tools/kotlin-lsp/testData/requests/testReference/referenceConstructor.in")
             checkResult("libraries/tools/kotlin-lsp/testData/requests/testReference/referenceConstructor.out")
+        }
+
+        @Test
+        fun referenceNoMain() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testReference/referenceNoMain.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testReference/referenceNoMain.out")
+        }
+    }
+
+    class HoverTest : AbstractLspTest(
+        "libraries/tools/kotlin-lsp/testData/requests/testHover/initialize.in",
+        "libraries/tools/kotlin-lsp/testData/requests/testHover/initialize.out"
+    ) {
+
+        @Test
+        fun hoverListOf() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testHover/hoverListOf.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testHover/hoverListOf.out")
+        }
+
+        @Test
+        fun hoverFunctionList() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testHover/hoverFunctionList.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testHover/hoverFunctionList.out")
+        }
+    }
+
+    class EditTest : AbstractLspTest() {
+
+        @Test
+        fun addLineAndHover() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.out")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChange.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/hover.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/hover.out")
+        }
+
+        @Test
+        fun addLineAndDefinition() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.out")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChange.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinition.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinition.out")
+        }
+
+        @Test
+        fun addLineAndReference() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.out")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChange.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/reference.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/reference.out")
+        }
+
+        @Test
+        fun removeLinesAndHover() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.out")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeRemove.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/hoverRemove.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/hoverRemove.out")
+        }
+
+        @Test
+        fun addLineTwiceAndHover() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.out")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChange.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChange.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/hoverTwiceChange.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/hoverTwiceChange.out")
+        }
+
+        @Test
+        fun addFunctionAndCallInOtherFileWithTypes() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.out")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeSecond.in")
+
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeFirstNoArgs.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionFirstNoArgs.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionFirstNoArgs.out")
+
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeFirstInt.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionInt.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionInt.out")
+
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeFirstString.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionString.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionString.out")
+        }
+
+        @Test
+        fun addCallAndFunctionsInOtherFileWithTypes() {
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/initialize.out")
+
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeFirstNoArgs.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeSecondNoArgs.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionFirstNoArgs2.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionFirstNoArgs2.out")
+
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeFirstInt.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeSecondInt.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionInt2.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionInt2.out")
+
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeFirstString.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/didChangeSecondString.in")
+            sendRequest("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionString2.in")
+            checkResult("libraries/tools/kotlin-lsp/testData/requests/testEdit/goToDefinitionString2.out")
         }
     }
 

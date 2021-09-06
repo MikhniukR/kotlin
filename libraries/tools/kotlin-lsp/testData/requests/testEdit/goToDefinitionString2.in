@@ -1,0 +1,14 @@
+{
+    "jsonrpc": "2.0",
+    "id" : 23,
+    "method": "textDocument/definition",
+    "params": {
+        "textDocument": {
+            "uri": "libraries/tools/kotlin-lsp/testData/projects/testEdit/First.kt"
+        },
+        "position": {
+            "line": 1,
+            "character": 5
+        }
+    }
+}

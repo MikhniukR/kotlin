@@ -1,3 +1,1 @@
-Content-Length: 144
-
 {"jsonrpc":"2.0","id":10,"result":{"contents":{"kind":"markdown","value":"```kotlin\npublic fun testHoverWithReturnType(x: Int): String\n```"}}}

@@ -1,0 +1,26 @@
+{
+    "jsonrpc": "2.0",
+    "id" : 5,
+    "method": "textDocument/didChange",
+    "params": {
+        "textDocument": {
+            "uri": "libraries/tools/kotlin-lsp/testData/projects/testEdit/Main.kt",
+            "version": 1
+        },
+        "contentChanges": [
+            {
+                "range": {
+                     "start": {
+                         "line": 9,
+                         "character": 4
+                     },
+                     "end": {
+                        "line": 10,
+                        "character": 9
+                     }
+                 },
+                "text": ""
+            }
+        ]
+    }
+}

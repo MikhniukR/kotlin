@@ -9,25 +9,12 @@ import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.Path
 
-
-private val excludedPatterns =
-    listOf(".*", "bin", "build", "node_modules", "target").map { FileSystems.getDefault().getPathMatcher("glob:$it") }
-
 fun findSourceFiles(workspaceRoot: Path): Set<URI> {
-    val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:**/*.{kt,kts}")
+    val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:**/*.{kt}")
     return workspaceRoot.toFile()
         .walk()
-//        .onEnter { isPathIncluded(it.toPath(), workspaceRoot) }
         .map { it.toPath() }
         .filter { sourceMatcher.matches(it) }
         .map { it.toUri() }
         .toSet()
-}
-
-fun isPathIncluded(file: Path, workspaceRoot: Path): Boolean = workspaceRoot.any { file.startsWith(it) }
-        && excludedPatterns.none { pattern ->
-    workspaceRoot
-        .mapNotNull { if (file.startsWith(it)) it.relativize(file) else null }
-        .flatten() // Extract path segments
-        .any(pattern::matches)
 }

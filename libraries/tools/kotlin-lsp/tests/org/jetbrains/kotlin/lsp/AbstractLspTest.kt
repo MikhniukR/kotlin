@@ -6,9 +6,12 @@
 package org.jetbrains.kotlin.lsp
 
 import org.eclipse.lsp4j.launch.LSPLauncher
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
-import java.io.*
+import java.io.File
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 import java.util.concurrent.Executors
 
 abstract class AbstractLspTest() {
@@ -48,9 +51,9 @@ abstract class AbstractLspTest() {
     }
 
     fun sendRequest(filePath: String) {
-        val request = File(filePath).readText()
-//        request = "Content-Length: ${request.length}\r\n\r\n"
-//        "Content-Length: len\r\n\r\n"
+        var request = File(filePath).readText()
+        request = replaceFilePathForAbsolute(request)
+        request = "Content-Length: ${request.length}\r\n\r\n" + request
         lspInput.write(request.toByteArray())
         lspInput.flush()
     }
@@ -64,17 +67,15 @@ abstract class AbstractLspTest() {
 
             assertFalse(wait > 10_000, "Wait for response more than 10 seconds")
         }
-        //todo save result with \r
-        val result = readResponse().replace("\r", "")
-        val expected = File(filePath).readText()
+        val result = readResponse()
+        var expected = File(filePath).readText()
+        expected = replaceFilePathForAbsolute(expected)
+        expected = "Content-Length: ${expected.length}\r\n\r\n" + expected
         assertEquals(expected, result, "Length of expected = ${expected.length}, result = ${result.length}")
     }
 
     private fun readResponse(): String {
         var result = ""
-        // todo fix but some multi thread shit, maybe because of piped stream
-        // wait at last read, but not get -1
-        // flush to get all result
 
         while (lspOutput.available() > 0) {
             result += lspOutput.read().toChar()
@@ -82,4 +83,11 @@ abstract class AbstractLspTest() {
         }
         return result
     }
+
+    private fun replaceFilePathForAbsolute(request: String): String =
+        request.replace(Regex("\"uri\" *: *\"[a-zA-Z/:.-]*\"")) { toAbsoluteFilePath(it) }
+
+    private fun toAbsoluteFilePath(match: MatchResult): String =
+        "\"uri\":\"file://${File(match.value.split("\"")[3]).absolutePath}\""
+
 }

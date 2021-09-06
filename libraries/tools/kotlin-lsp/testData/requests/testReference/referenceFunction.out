@@ -1,3 +1,1 @@
-Content-Length: 227
-
-{"jsonrpc":"2.0","id":4,"result":[{"uri":"file:///Users/Roman.Mikhniuk/work/kotlin/libraries/tools/kotlin-lsp/testData/projects/testReference/test.kt","range":{"start":{"line":1,"character":4},"end":{"line":1,"character":5}}}]}
+{"jsonrpc":"2.0","id":4,"result":[{"uri":"libraries/tools/kotlin-lsp/testData/projects/testReference/test.kt","range":{"start":{"line":1,"character":4},"end":{"line":1,"character":5}}}]}

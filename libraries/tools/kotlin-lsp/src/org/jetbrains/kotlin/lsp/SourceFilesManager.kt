@@ -5,59 +5,33 @@
 
 package org.jetbrains.kotlin.lsp
 
-import com.intellij.mock.MockApplication
-import com.intellij.mock.MockProject
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.util.Disposer
-import com.intellij.psi.impl.PsiFileFactoryImpl
-import com.intellij.psi.search.GlobalSearchScope
-import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.config.CompilerConfiguration
-import org.jetbrains.kotlin.config.languageVersionSettings
-import org.jetbrains.kotlin.idea.fir.low.level.api.DeclarationProvider
-import org.jetbrains.kotlin.idea.fir.low.level.api.KtDeclarationProviderFactory
-import org.jetbrains.kotlin.idea.fir.low.level.api.KtPackageProvider
-import org.jetbrains.kotlin.idea.fir.low.level.api.KtPackageProviderFactory
-import org.jetbrains.kotlin.idea.fir.low.level.api.api.FirModuleResolveStateConfigurator
-import org.jetbrains.kotlin.idea.fir.low.level.api.api.KotlinOutOfBlockModificationTrackerFactory
-import org.jetbrains.kotlin.idea.frontend.api.InvalidWayOfUsingAnalysisSession
-import org.jetbrains.kotlin.idea.frontend.api.KtAnalysisSessionProvider
-import org.jetbrains.kotlin.idea.frontend.api.fir.KtFirAnalysisSessionProvider
-import org.jetbrains.kotlin.idea.references.HLApiReferenceProviderService
-import org.jetbrains.kotlin.idea.references.KotlinFirReferenceContributor
-import org.jetbrains.kotlin.idea.references.KotlinReferenceProviderContributor
-import org.jetbrains.kotlin.lsp.implementations.DeclarationProviderImpl
-import org.jetbrains.kotlin.lsp.implementations.FirModuleResolveStateConfiguratorImpl
-import org.jetbrains.kotlin.lsp.implementations.KotlinOutOfBlockModificationTrackerFactoryImpl
-import org.jetbrains.kotlin.lsp.implementations.KtPackageProviderImpl
+import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.command.CommandProcessor
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.event.DocumentListener
+import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiDocumentManager
+import org.eclipse.lsp4j.TextDocumentContentChangeEvent
+import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.lsp.utils.findSourceFiles
-import org.jetbrains.kotlin.psi.KotlinReferenceProvidersService
+import org.jetbrains.kotlin.lsp.utils.toOffset
 import org.jetbrains.kotlin.psi.KtFile
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class SourceFilesManager {
+class SourceFilesManager(val serviceManager: ServiceManager) {
 
     private val workspaceRoots = mutableSetOf<Path>()
     private val sourceFiles = mutableMapOf<URI, SourceKtFile>()
-
-    private val environment = KotlinCoreEnvironment.createForProduction(
-        Disposer.newDisposable(), CompilerConfiguration(),
-        EnvironmentConfigFiles.JVM_CONFIG_FILES
-    )
-    private val project = environment.project as MockProject
-
-    private val factory = PsiFileFactoryImpl(project)
 
     fun addWorkspaceRoot(root: Path) {
         workspaceRoots.add(root)
         val newSource = findSourceFiles(root)
 
         for (uri in newSource) {
-            SourceKtFile(uri, factory).let {
-                sourceFiles[uri] = it
+            SourceKtFile(uri, serviceManager.getPsiFactory()).let {
+                if (it.language == KotlinLanguage.INSTANCE) sourceFiles[uri] = it
             }
         }
     }
@@ -67,50 +41,52 @@ class SourceFilesManager {
 
     fun getAllKtFiles(): List<KtFile> = sourceFiles.values.map { it.ktFile }
 
-    @OptIn(InvalidWayOfUsingAnalysisSession::class)
-    fun registerComponents() {
-        val ktFiles = sourceFiles.values.map { it.ktFile }
-
-        project.picoContainer.registerComponentInstance(
-            KtAnalysisSessionProvider::class.qualifiedName,
-            KtFirAnalysisSessionProvider(project)
-        )
-        //todo check to resolve from stdlib
-        project.picoContainer.registerComponentInstance(
-            FirModuleResolveStateConfigurator::class.qualifiedName,
-            FirModuleResolveStateConfiguratorImpl(project, environment.configuration.languageVersionSettings, ktFiles)
-        )
-
-        project.picoContainer.registerComponentInstance(
-            KotlinOutOfBlockModificationTrackerFactory::class.qualifiedName,
-            KotlinOutOfBlockModificationTrackerFactoryImpl()
-        )
-
-        RegisterComponentService.registerFirIdeResolveStateService(project)
-
-        project.picoContainer.registerComponentInstance(
-            KtDeclarationProviderFactory::class.qualifiedName,
-            object : KtDeclarationProviderFactory() {
-                override fun createDeclarationProvider(searchScope: GlobalSearchScope): DeclarationProvider {
-                    return DeclarationProviderImpl(searchScope, ktFiles.filter { searchScope.contains(it.virtualFile) })
+    fun editFile(uri: URI, changes: List<TextDocumentContentChangeEvent>) {
+        val document = getDocument(uri) ?: return
+        val project = serviceManager.getProject()
+        addListener(document, project)
+        WriteAction.run<Exception> {
+            CommandProcessor.getInstance().executeCommand(project, {
+                changes.forEach {
+                    if (it.range.start.toOffset(document) != it.range.end.toOffset(document)) {
+                        document.deleteString(it.range.start.toOffset(document), it.range.end.toOffset(document))
+                    }
+                    document.insertString(it.range.start.toOffset(document), it.text)
+                    PsiDocumentManager.getInstance(project).commitDocument(document)
                 }
-            })
+            }, "Edit for didChange", "")
+        }
+    }
 
-        project.picoContainer.registerComponentInstance(
-            KtPackageProviderFactory::class.qualifiedName,
-            object : KtPackageProviderFactory() {
-                override fun createPackageProvider(searchScope: GlobalSearchScope): KtPackageProvider {
-                    return KtPackageProviderImpl(searchScope, ktFiles.filter { searchScope.contains(it.virtualFile) })
-                }
-            })
-
-        val application = ApplicationManager.getApplication() as MockApplication
-        KotlinCoreEnvironment.underApplicationLock {
-            application.registerService(KotlinReferenceProvidersService::class.java, HLApiReferenceProviderService::class.java)
-            application.registerService(KotlinReferenceProviderContributor::class.java, KotlinFirReferenceContributor::class.java)
+    fun editFileHardRebuildPSI(uri: URI, changes: List<TextDocumentContentChangeEvent>) {
+        val ktFile = getKtFile(uri) ?: return
+        var text = StringBuilder(ktFile.text)
+        changes.forEach {
+            if (it.range.start.toOffset(ktFile) != it.range.end.toOffset(ktFile)) {
+                text = StringBuilder(text.removeRange(it.range.start.toOffset(ktFile), it.range.end.toOffset(ktFile)))
+            }
+            text.insert(it.range.start.toOffset(ktFile), it.text)
         }
 
+        sourceFiles.replace(uri, SourceKtFile(uri, serviceManager.getPsiFactory(), text.toString()))
+        serviceManager.updateServices(getAllKtFiles())
     }
+
+    private fun getDocument(uri: URI): Document? {
+        return sourceFiles[uri]?.getDocument()
+    }
+
+    private fun addListener(document: Document, project: Project) {
+        // Do many times, because:
+        // Document instances are weakly referenced from VirtualFile instances.
+        // Thus, an unmodified Document instance can be garbage-collected if no
+        // one references it, and a new instance is created if the document contents are reaccessed later.
+        try {
+            document.addDocumentListener(PsiDocumentManager.getInstance(project) as DocumentListener)
+        } catch (throwable: Throwable) {
+        }
+    }
+
 }
 
 val URI.filePath: Path? get() = runCatching { Paths.get(this) }.getOrNull()

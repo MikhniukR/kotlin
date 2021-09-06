@@ -7,6 +7,12 @@ plugins {
     id("com.github.johnrengelman.shadow")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
 
 dependencies {
     implementation(kotlinStdlib())
@@ -20,12 +26,8 @@ dependencies {
     implementation(intellijCoreDep()) { includeJars("intellij-core") }
     implementation(intellijDep()) { includeIntellijCoreJarDependencies(project) }
     implementation(intellijDep()) { includeJars("intellij-deps-fastutil-8.4.1-4") }
+    implementation(intellijDep()) { includeJars("platform-api", "platform-impl", "platform-concurrency") }
     implementation(jpsStandalone()) { includeJars("jps-model") }
-
-    //logging
-    implementation("org.slf4j:slf4j-api:1.7.30")
-    implementation("ch.qos.logback:logback-classic:1.2.3")
-    implementation("ch.qos.logback:logback-core:1.2.3")
 
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0")
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0")
@@ -49,12 +51,10 @@ projectTest(jUnit5Enabled = true) {
     useJUnitPlatform()
 }
 
-// todo fix later
 tasks.withType<ProcessResources> {
-//    from(zipTree("/Users/Roman.Mikhniuk/work/kotlin/libraries/stdlib/jvm/build/libs/kotlin-stdlib-1.6.255-SNAPSHOT.jar"))
     from(zipTree("/Users/Roman.Mikhniuk/tmp/kotlin-stdlib-1.6.255-SNAPSHOT.jar"))
 }
-//todo add to verification-metadata
+
 disableDependencyVerification()
 
 application {
@@ -62,7 +62,7 @@ application {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 tasks {

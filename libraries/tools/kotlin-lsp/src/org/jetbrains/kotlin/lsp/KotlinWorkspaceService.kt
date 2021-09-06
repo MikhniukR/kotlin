@@ -10,9 +10,10 @@ import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.WorkspaceService
 import org.jetbrains.kotlin.lsp.utils.AsyncExecutor
-import org.jetbrains.kotlin.lsp.utils.doDocumentSymbol
-import org.jetbrains.kotlin.lsp.utils.documentSymbol
-import org.jetbrains.kotlin.lsp.utils.getAsList
+import org.jetbrains.kotlin.lsp.symbols.doDocumentSymbol
+import org.jetbrains.kotlin.lsp.symbols.getAsList
+import java.io.File
+import java.util.*
 import java.util.concurrent.CompletableFuture
 
 class KotlinWorkspaceService(private val sourceFiles: SourceFilesManager) : WorkspaceService, LanguageClientAware {

@@ -1,12 +1,10 @@
-Content-Length: 363
-
 {
     "jsonrpc": "2.0",
     "id" : 12,
     "method": "textDocument/references",
     "params": {
         "textDocument": {
-            "uri": "file:///Users/Roman.Mikhniuk/work/kotlin/libraries/tools/kotlin-lsp/testData/projects/simpleProject/src/secondFile.kt"
+            "uri": "libraries/tools/kotlin-lsp/testData/projects/simpleProject/src/secondFile.kt"
         },
         "position": {
             "line": 0,

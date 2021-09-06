@@ -314,8 +314,7 @@ class ClasspathRootsResolver(
 
     private fun report(severity: CompilerMessageSeverity, message: String, file: VirtualFile? = null) {
         if (messageCollector == null) {
-            return
-//            throw IllegalStateException("${if (file != null) file.path + ":" else ""}$severity: $message (no MessageCollector configured)")
+            throw IllegalStateException("${if (file != null) file.path + ":" else ""}$severity: $message (no MessageCollector configured)")
         }
         messageCollector.report(
             severity, message,
